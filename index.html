@@ -8,7 +8,7 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    background-color: black;
+    background-color: rgb(51 36 21);
 }
 
 body {
@@ -18,12 +18,33 @@ body {
     justify-content: center;
     justify-items: center;
     grid-template-columns: 100%;
+    color: rgb(255 244 223);
 }
 
 body > canvas {
     grid-column: 1;
     grid-row: 1;
     margin: 0;
+}
+
+body > h1 {
+    grid-column: 1;
+    grid-row: 1;
+    margin: auto;
+    margin-left: 90px;
+    margin-bottom: 45px;
+    z-index: 1;
+    color: rgb(30, 6, 53);
+}
+
+body > p {
+    font-size: 20px;
+    grid-column: 1;
+    grid-row: 2;
+    margin: auto;
+    margin-left: 90px;
+    margin-top: 45px;
+    z-index: 1;
 }
 
 body > #game-message {
@@ -192,6 +213,11 @@ body > .controls-block {
 </style>
 
 <canvas id="game-canvas"></canvas>
+
+<!--h1>Colin.</h1>
+
+<p>A linear-interpolation collision library.</p-->
+
 <div id="game-message" hidden></div>
 <div id="game-stats" hidden></div>
 

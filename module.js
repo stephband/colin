@@ -269,7 +269,7 @@ function start() {
     };
 
     const updates = [
-        Box.create(viewbox[0], viewbox[1], viewbox[2], viewbox[3]),
+        Box.create(viewbox[0], viewbox[1], viewbox[2], viewbox[3], true),
         Ball.create(10, 120, 120, Math.random() * 200, Math.random() * 200),
         Ball.create(30, 60, 60, Math.random() * 200, Math.random() * 200),
         Ball.create(20, 360, 120, Math.random() * 200, Math.random() * 200),

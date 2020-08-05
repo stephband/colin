@@ -28,7 +28,7 @@ const pi   = Math.PI;
 // calculations at higher resolution, though. We don't want to unnecessarily
 // miss collisions. That's the risk, here, i wish there were a better way, hmmm...
 // https://developer.mozilla.org/en-US/docs/Web/API/DOMHighResTimeStamp
-const minSameObjectCollisionTime = 0.000000001;
+const minSameObjectCollisionTime = 10e-12;
 
 const canvas  = document.getElementById('game-canvas');
 canvas.width  = 720;
@@ -272,13 +272,13 @@ function start() {
         Box.create(viewbox[0], viewbox[1], viewbox[2], viewbox[3]),
         Ball.create(10, 120, 120, Math.random() * 200, Math.random() * 200),
         Ball.create(30, 60, 60, Math.random() * 200, Math.random() * 200),
-        Ball.create(20, 320, 120, Math.random() * 200, Math.random() * 200),
-        Ball.create(10, 320, 220, Math.random() * 200, Math.random() * 200),
+        Ball.create(20, 360, 120, Math.random() * 200, Math.random() * 200),
+        Ball.create(10, 360, 220, Math.random() * 200, Math.random() * 200),
         Ball.create(30, 80, 180, Math.random() * 400, Math.random() * 400),
-        Ball.create(40, 430, 330, Math.random() * 400, Math.random() * 400),
+        Ball.create(50, 430, 330, Math.random() * 400, Math.random() * 400),
         Ball.create(15, 80,  400, Math.random() * 400, Math.random() * 400),
         Ball.create(20, 430, 330, Math.random() * 400, Math.random() * 400, '#ee5500'),
-        Ball.create(30, 480, 280, Math.random() * 400, Math.random() * 400),
+        Ball.create(30, 480, 70, Math.random() * 400, Math.random() * 400),
         Ball.create(42, 630, 190, Math.random() * 400, Math.random() * 400),
         Ball.create(40, 280, 180, Math.random() * 400, Math.random() * 400),
         Ball.create(10, 280, 180, Math.random() * 400, Math.random() * 400, '#ee5500')/*,

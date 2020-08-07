@@ -19,19 +19,21 @@ Renderer(
 )
 
 Inside a frame the update cycle is run to identify each collision. First
-update() is called to update the future velocities and positions of all objects.
-It should return new objects.
+update(t0, t1, object) is called to update the future velocities and positions
+of each objects. It should return a new object.
 
-Then for every possible collision pair following the update, detect() is called.
-It should return an array of the form [t, x, y] to indicate a collision
+Then for every possible collision pair following the update, detect(a0, a1, b0, b1)
+is called. It should return an array of the form [t, x, y] to indicate a collision
 has been detected at time ratio t and position x, y.
 
-The collide() function is then called when the earliest collision
-or collisions for the update are identified. It should be used to make
-changes to the objects, such as bouncing them off one another by inverting
-their velocities. Then the update cycle is run again.
+The collide(collision) function is then called once for each of the earliest
+collisions identified. It should be used to make changes to the objects,
+such as bouncing them off one another by inverting their velocities. Then the
+update cycle is run again.
 
-The update cycle ends when no more collisions are detected before time t1.
+The update cycle ends when no more collisions are detected before time t1,
+then render(ctx, camera, style, object, time) is called to render the updated
+objects to canvas.
 **/
 
 import { deep } from '../../fn/module.js';
@@ -123,10 +125,17 @@ function detectCollisions(detect, collisions, t0, t1, objects, objects1) {
 
     let n = datas.length;
     while((n -= 3) > -1) {
+        const data = datas[n];
+        const a    = datas[n + 1];
+        const b    = datas[n + 2];
         returns.push({
-            time:    datas[n][0] * (t1 - t0) + t0,
-            point:   datas[n].slice(1),
-            objects: [datas[n + 1], datas[n + 2]]
+            // data[0] is the ratio of time from t0 to t1
+            time:    data[0] * (t1 - t0) + t0,
+            // Collision [x, y] coordinates
+            point:   data.slice(1),
+            // Sort objects by type alphabetically so our collision identifiers
+            // are sane... but do we want to bake in types in the renderer?
+            objects: [a, b] //a.type > b.type ? [b, a] : [a, b]
         });
     }
 

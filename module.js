@@ -1,5 +1,5 @@
 
-import { get, overload, noop } from '../fn/module.js';
+import { by, get, overload, noop } from '../fn/module.js';
 import { mag, angle } from './modules/vector.js';
 import { detectCircleCircle, detectBoxCircle } from './modules/collision.js';
 import { Renderer } from './modules/renderer.js';
@@ -120,11 +120,8 @@ function collideBoxBall(collision, box, ball) {
     }
 }
 
-const collide = overload((collision) => collision.objects.map(get('type')).join('-'), {
-    // Should probably schedule WebAudio herein... y'know, as soon as possible
-    // so it plays in time with the render
+const collide = overload((collision) => collision.objects.sort(by(get('type'))).map(get('type')).join('-'), {
     'ball-ball': collideBallBall,
-    'box-ball': (collision) => collideBoxBall(collision, collision.objects[0], collision.objects[1]),
     'ball-box': (collision) => collideBoxBall(collision, collision.objects[1], collision.objects[0])
 });
 

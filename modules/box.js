@@ -1,7 +1,7 @@
 import { get, last } from '../../fn/module.js';
 import { drawPath } from './canvas.js';
 
-export function create(x, y, w, h) {
+export function of(x, y, w, h) {
     return {
         type: 'box',
         data: Float64Array.from(arguments)

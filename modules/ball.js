@@ -7,7 +7,7 @@ const assign = Object.assign;
 
 /* Ball */
 
-export function create(radius, x = 0, y = 0, vx = 0, vy = 0, color) {
+export function of(x = 0, y = 0, radius, vx = 0, vy = 0, color) {
     return {
         type: 'ball',
         data: Float64Array.of(0, 0, radius),

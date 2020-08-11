@@ -50,18 +50,18 @@
         ctx.stroke();
 
         // Draw t0
-        drawCircle(ctx, [xc0, yc0], r0);
+        drawCircle(ctx, [xc0, yc0, r0]);
         ctx.fillStyle = '#e0e0e0';
         ctx.fill();
 
         // Draw t1
-        drawCircle(ctx, [xc1, yc1], r1);
+        drawCircle(ctx, [xc1, yc1, r1]);
         ctx.fillStyle = '#c0c0c0';
         ctx.fill();
 
         if (data) {
             // Draw t
-            drawCircle(ctx, [data[0] * (xc1 - xc0) + xc0, data[0] * (yc1 - yc0) + yc0], data[0] * (r1 - r0) + r0);
+            drawCircle(ctx, [data[0] * (xc1 - xc0) + xc0, data[0] * (yc1 - yc0) + yc0, data[0] * (r1 - r0) + r0]);
             ctx.fillStyle = '#444444';
             ctx.fill();
         }

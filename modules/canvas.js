@@ -13,9 +13,9 @@ export function drawPath(ctx, points) {
     .closePath();
 }
 
-export function drawCircle(ctx, center, radius) {
+export function drawCircle(ctx, data) {
     ctx.beginPath();
-    ctx.arc(center[0], center[1], radius, 0, Math.PI * 2, true);
+    ctx.arc(data[0], data[1], data[2], 0, Math.PI * 2, true);
     ctx.closePath();
 }
 

@@ -75,7 +75,7 @@ export function render(ctx, viewbox, style, ball) {
     ctx.translate(ball.position.value[0], ball.position.value[1]);
     //ctx.rotate(ball.rotation.value * 2 * Math.PI);
 
-    drawCircle(ctx, ball.data, ball.data[2]);
+    drawCircle(ctx, ball.data);
     ctx.fillStyle = ball.color || style.getPropertyValue('--ball-fill');
     ctx.fill();
     ctx.restore();

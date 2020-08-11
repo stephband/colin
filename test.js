@@ -50,7 +50,7 @@ export function test(value) {
 
     // Draw collision
     if (data) {
-        drawCircle(ctx, [data[1], data[2]], 0.15);
+        drawCircle(ctx, [data[1], data[2], 0.15]);
         ctx.strokeStyle = 'red';
         ctx.lineWidth = 0.1;
         ctx.stroke();

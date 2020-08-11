@@ -58,3 +58,54 @@ export function gradient(v0, v1) {
 export function equal(v0, v1) {
     return v0[0] === v1[0] && v0[1] === v1[1];
 }
+
+
+/* Centroid of polygon */
+
+function reduceLines(fn, total, data) {
+    const n1 = data.length - 2;
+
+    var n = 0;
+    var total = 0;
+
+    while(n < n1) {
+        total = fn(total, data[n], data[n + 1], data[n + 2], data[n + 3]);
+        n += 2;
+    }
+
+    // Is it not a closed path? add the final line
+    if (data[n] !== data[0] && data[n + 1] !== data[1]) {
+        total = fn(total, data[n], data[n + 1], data[0], data[1]);
+    }
+
+    return total;
+}
+
+const centroidTotals = {
+    asum:  0,
+    cxsum: 0,
+    cysum: 0
+};
+
+function toCentroidTotals(totals, x0, y0, x1, y1) {
+    totals.asum  += x0 * y1 - x1 * y0;
+    totals.cxsum += (x0 + x1) * (x0 * y1 - x1 * y0);
+    totals.cysum += (y0 + y1) * (x0 * y1 - x1 * y0);
+    return totals;
+}
+
+export function centroid(data) {
+    // From "Of a polygon":
+    // https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
+
+    centroidTotals.asum  = 0;
+    centroidTotals.cxsum = 0;
+    centroidTotals.cysum = 0;
+
+    const { asum, cxsum, cysum } = reduceLines(toCentroidTotals, centroidTotals, data);
+
+    const cx = cxsum / (3 * asum);
+    const cy = cysum / (3 * asum);
+
+    return Float64Array.of(cx, cy);
+}

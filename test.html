@@ -12,6 +12,12 @@
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
 
+    h2 {
+        font-family: ;
+        font-size: 1.3125rem;
+        margin: 10px 0 0 10px;
+    }
+
     .test-block {
         display: inline-block;
         vertical-align: top;
@@ -45,18 +51,23 @@
     group('detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1)', detectStaticLineMovingCircle, function draw(ctx, data, xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1) {
         // Draw line
         drawLines(ctx, [xs, ys, xe, ye]);
-        ctx.strokeStyle = '#444444';
+        ctx.strokeStyle = 'black';
         ctx.lineWidth = 0.025;
         ctx.stroke();
 
         // Draw t0
         drawCircle(ctx, [xc0, yc0, r0]);
-        ctx.fillStyle = '#e0e0e0';
+        ctx.fillStyle = '#cccccc88';
         ctx.fill();
+
+        drawLines(ctx, [xc0, yc0, xc1, yc1]);
+        ctx.strokeStyle = '#cccccc88';
+        ctx.lineWidth = 0.025;
+        ctx.stroke();
 
         // Draw t1
         drawCircle(ctx, [xc1, yc1, r1]);
-        ctx.fillStyle = '#c0c0c0';
+        ctx.fillStyle = '#99999988';
         ctx.fill();
 
         if (data) {

@@ -1,0 +1,86 @@
+
+<link rel="stylesheet" href="../bolt/style.min.css"></link>
+
+<style>
+    :root {
+        background-color: #cccccc;
+    }
+
+    canvas {
+        background-color: white;
+        height: auto;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .test-block {
+        display: inline-block;
+        vertical-align: top;
+        width: 100px;
+        overflow: visible;
+        margin: 10px 0 0 10px;
+    }
+
+    .test-block > p {
+        font-family: monospace;
+        font-size: 11px;
+        line-height: 1.2;
+        color: black;
+        margin: 0;
+    }
+
+    .test-block > canvas {
+        width: 100%;
+    }
+
+    .test-block > canvas + p {
+        margin-top: 0.375rem;
+    }
+</style>
+
+<script type="module">
+    import { test, group } from './test.js';
+    import { drawPath, drawCircle, drawLines } from './modules/canvas.js';
+    import { detectStaticLineMovingCircle } from './modules/collision.js';
+
+    group('detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1)', detectStaticLineMovingCircle, function draw(ctx, data, xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1) {
+        // Draw line
+        drawLines(ctx, [xs, ys, xe, ye]);
+        ctx.strokeStyle = '#444444';
+        ctx.lineWidth = 0.025;
+        ctx.stroke();
+
+        // Draw t0
+        drawCircle(ctx, [xc0, yc0], r0);
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fill();
+
+        // Draw t1
+        drawCircle(ctx, [xc1, yc1], r1);
+        ctx.fillStyle = '#c0c0c0';
+        ctx.fill();
+
+        if (data) {
+            // Draw t
+            drawCircle(ctx, [data[0] * (xc1 - xc0) + xc0, data[0] * (yc1 - yc0) + yc0], data[0] * (r1 - r0) + r0);
+            ctx.fillStyle = '#444444';
+            ctx.fill();
+        }
+    }, function(test) {
+        test([], 0.5, 0.5, 3, 3, 1, 3, 0.5, 2, 0.5, 0.5);
+        test([], 0.5, 0.5, 3, 3, 2, -1, 0.5, -1, -0.5, 0.5);
+        test([], 0.5, 0.5, 3, 3, 1.5, 0.5, 0.5, 3, 2, 0.5);
+        test([], 0.5, 0.5, 3, 3, 1.5, 0.5, 0.5, 3, 2, 1);
+        test([], 0.5, 0.5, 2.5, 0.5, 1.5, 0.5, 0.5, 3,   2, 0.5);
+        test([], 0.5, 0.5, 2.5, 0.5, 1.5, 1.5, 0.5, 3,   2, 0.5);
+        test([], 0.5, 1,   2.5, 1,   3.1, -1,  0.5, 3.1, 3, 0.5);
+        test([], 0.5, 1,   2.5, 1,   2.8, -1,  0.5, 2.8, 3, 0.5);
+        test([], 0.5, 1,   2.5, 1,   2.8, -1,  0.5, 2.8, 3, 1);
+        test([], 0.5, 1,   2.5, 1,   2.5, -1,  0.5, 2.5, 3, 0.5);
+        test([], 0.5, 1,   2.5, 1,   2.2, -1,  0.5, 2.2, 3, 0.5);
+        test([], 0.5, 0.5, 3, 0.5, 1.5, -1.5, 0.5, 3, 2, 0.5);
+        test([], 0.5, 0.5, 3, 0.5, 1.5, -1.5, 0.5, 0, 2, 0.5);
+        test([], 0.5, -1.5, 0.5, 3, -1.5, 0, 0.5, 1.5, 0, 0.5);
+        test([], 0.5, -1.5, 0.5, 3, -1.5, 0, 0.5, 1.5, 1, 0.5);
+        test([], 0.4, -1.5, 0.6, 3, -1.5, 0, 0.5, 1.5, 1, 0.5);
+    });
+</script>

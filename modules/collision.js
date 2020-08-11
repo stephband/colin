@@ -15,6 +15,16 @@ function isPointInLine(xs, ys, xe, ye, xp, yp) {
     && g === ((yp - ys) / (xp - xs)) ;
 }
 
+function timeAtPoint(x0, y0, x1, y1, xp, yp) {
+    const g = (y1 - y0) / (x1 - x0);
+
+    // Return true where point is inside line bounds and p is
+    // the same gradient from s as e is...
+    return (g > -1 && g < 1) ?
+        (xp - x0) / (x1 - x0) :
+        (yp - y0) / (y1 - y0) ;
+}
+
 function min0To1(a, b) {
     // Get the min of a and b in the range 0 - 1
     return a >= 0 && a < 1 ?
@@ -43,7 +53,7 @@ function timeAtQuadratic(a, b, c) {
     return min0To1(ta, tb);
 }
 
-function timeAtMovingOverlap(xs0, ys0, xe0, ye0, xs1, ys1, xe1, ye1, xp0, yp0, xp1, yp1) {
+function timeAtMovingLineOverlap(xs0, ys0, xe0, ye0, xs1, ys1, xe1, ye1, xp0, yp0, xp1, yp1) {
     // Is it starting off intersecting?
     const xmin = min(xs0, xe0);
     const ymin = min(ys0, ye0);
@@ -73,7 +83,7 @@ function timeAtMovingOverlap(xs0, ys0, xe0, ye0, xs1, ys1, xe1, ye1, xp0, yp0, x
 
 function detectMovingLineOverlap(xs0, ys0, xe0, ye0, xs1, ys1, xe1, ye1, xp0, yp0, xp1, yp1) {
     // Is it starting off intersecting?
-    const t = timeAtMovingOverlap(xs0, ys0, xe0, ye0, xs1, ys1, xe1, ye1, xp0, yp0, xp1, yp1);
+    const t = timeAtMovingLineOverlap(xs0, ys0, xe0, ye0, xs1, ys1, xe1, ye1, xp0, yp0, xp1, yp1);
 
     // No intersect?
     if (t === undefined) { return; }
@@ -83,6 +93,143 @@ function detectMovingLineOverlap(xs0, ys0, xe0, ye0, xs1, ys1, xe1, ye1, xp0, yp
         t * (xp1 - xp0) + xp0,
         t * (yp1 - yp0) + yp0
     );
+}
+
+function intersectionXLine(x, xs, ys, xe, ye) {
+    const ratio = (x - xs) / (xe - xs);
+    const y = ratio * (ye - ys) + ys;
+    return Float64Array.of(x, y);
+}
+
+function intersectionLineLine(xas, yas, xae, yae, xbs, ybs, xbe, ybe) {
+    if (xas === xae) {
+        // Line is vertical
+        if (xbs === xbe) {
+            // So is other line!
+            return;
+        }
+
+        return intersectionXLine(xas, xbs, ybs, xbe, ybe);
+    }
+
+    if (xbs === xbe) {
+        return intersectionXLine(xbs, xas, yas, xae, yae);
+    }
+
+    // y = ma x + ca
+    // y = mb x + cb
+    let ma = (yae - yas) / (xae - xas);
+    let mb = (ybe - ybs) / (xbe - xbs);
+    ma = ma === -Infinity ? Infinity : ma ;
+    mb = mb === -Infinity ? Infinity : mb ;
+
+    const ca = ma === Infinity ?
+        0 :
+        yas - ma * xas ;
+
+    const cb = mb === Infinity ?
+        0 :
+        ybs - mb * xbs ;
+
+    // Are lines parallel?
+    if (ma === mb) {
+        // Are lines overlaps?
+        if (ca === cb) {
+            console.log('Hmmmmmm. do somthing about this')
+            return Float64Array.of(xas, yas);
+        }
+
+        return undefined;
+    }
+
+    const x = (cb - ca) / (ma - mb);
+    const y = (mb * ca - ma * cb) / (mb - ma);
+
+    return Float64Array.of(x, y);
+}
+
+function nearestPointOnLine(xs, ys, xe, ye, xp, yp) {
+    // From The Closest Point on a Line to a Point Algorithm, here:
+    // https://ericleong.me/research/circle-line/
+
+    const a  = ye - ys;
+    const b  = xs - xe;
+    const c1 = a * xs + b * ys;
+    const c2 = a * yp - b * xp;
+    const d  = a * a + b * b;
+
+    // Is point on the line`?
+    if (d === 0) {
+        return Float64Array.of(xp, yp);
+    }
+
+    const x = (a * c1 - b * c2) / d;
+    const y = (a * c2 + b * c1) / d;
+
+    return Float64Array.of(x, y);
+}
+
+function staticLineMovingRadius() {
+
+}
+
+
+export function detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1) {
+    // The closest point on the line to the circle center start
+    const l0 = nearestPointOnLine(xs, ys, xe, ye, xc0, yc0);
+    const xv0 = l0[0] - xc0;
+    const yv0 = l0[1] - yc0;
+
+    // Is it starting inside the radius? Dont count as collision -
+    // a collision is an event not a continuous state. Because nearestPointOnLine
+    // does not test line limits, this includes circles starting beyond
+    // line limits, but that means the circle can only hit the ends, and
+    // they should be picked up by point-circle detection on the endpoints
+    if (xv0 * xv0 + yv0 * yv0 < r0 * r0) {
+        return;
+    }
+
+    // The point of intersection between line and circle center
+    const a = intersectionLineLine(xs, ys, xe, ye, xc0, yc0, xc1, yc1);
+
+    // Is line and movement parallel?
+    if (!a) {
+        return staticLineMovingRadius(xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1);
+    }
+
+    // The closest point on the line to the circle center end
+    //const l1 = nearestPointOnLine(xs, ys, xe, ye, xc1, yc1);
+    // The closest point on the movement vector to line start
+    //const c = nearestPointOnLine(xc0, yc0, xc1, yc1, xs, ys);
+    // The closest point on the movement vector to line end
+    //const d = nearestPointOnLine(xc0, yc0, xc1, yc1, xe, ye);
+
+    // Now there's a bunch of conditions in here which I need to do...
+
+    // I don't understand the way he does it, I'm doing it the stupid way
+    const m = pow(xv0 * xv0 + yv0 * yv0, 0.5);
+    const ratio = r0 / m;
+    const xct = a[0] - ratio * (a[0] - xc0);
+    const yct = a[1] - ratio * (a[1] - yc0);
+
+    const t          = timeAtPoint(xc0, yc0, xc1, yc1, xct, yct);
+    const [xpt, ypt] = nearestPointOnLine(xs, ys, xe, ye, xct, yct);
+
+    const g = (ye - ys) / (xe - xs);
+
+    // Is point inside line (not including the actual points at the ends,
+    // as they are tested separately) TODO: this is philosophical: we are
+    // sure of this reasoning?
+    const isWithinLineBounds = (g > -1 && g < 1) ?
+        xpt > min(xs, xe) && xpt < max(xs, xe) :
+        ypt > min(ys, ye) && ypt < max(ys, ye) ;
+
+    if (!isWithinLineBounds) {
+        return;
+    }
+
+    // Return t, x, y and object data xct, yct, r0
+    return Float64Array.of(t, xpt, ypt, xct, yct, r0);
 }
 
 export function detectStaticLineMovingPoint(xs, ys, xe, ye, xp0, yp0, xp1, yp1) {

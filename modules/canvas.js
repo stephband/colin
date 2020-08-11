@@ -18,3 +18,20 @@ export function drawCircle(ctx, center, radius) {
     ctx.arc(center[0], center[1], radius, 0, Math.PI * 2, true);
     ctx.closePath();
 }
+
+export function drawLines(ctx, points) {
+    if (points.length < 4) {
+        throw new Error('points must contain at least two coordinates (length 4)')
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(points[0], points[1]);
+
+    let n = 2;
+    while (n < points.length) {
+        ctx.lineTo(points[n], points[n + 1]);
+        n += 2;
+    }
+
+    ctx.closePath();
+}

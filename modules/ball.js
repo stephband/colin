@@ -10,7 +10,7 @@ const assign = Object.assign;
 export function of(x = 0, y = 0, radius, vx = 0, vy = 0, color) {
     return {
         type: 'ball',
-        data: Float64Array.of(0, 0, radius),
+        data: Float64Array.of(0, 0, radius, radius * radius * radius / 8000),
         position: {
             value:        Float64Array.of(x, y),
             velocity:     Float64Array.of(vx, vy),

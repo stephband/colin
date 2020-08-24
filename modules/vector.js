@@ -62,7 +62,7 @@ export function equal(v0, v1) {
 
 /* Centroid of polygon */
 
-function reduceLines(fn, total, data) {
+function reducePolygon(fn, total, data) {
     const n1 = data.length - 2;
 
     var n = 0;
@@ -102,7 +102,7 @@ export function centroid(data) {
     centroidTotals.cxsum = 0;
     centroidTotals.cysum = 0;
 
-    const { asum, cxsum, cysum } = reduceLines(toCentroidTotals, centroidTotals, data);
+    const { asum, cxsum, cysum } = reducePolygon(toCentroidTotals, centroidTotals, data);
 
     const cx = cxsum / (3 * asum);
     const cy = cysum / (3 * asum);

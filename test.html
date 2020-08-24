@@ -47,6 +47,7 @@
     import { test, group } from './test.js';
     import { drawPath, drawCircle, drawLines } from './modules/canvas.js';
     import { detectStaticLineMovingCircle } from './modules/collision.js';
+    import { centroid } from './modules/vector.js';
 
     group('detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1)', detectStaticLineMovingCircle, function draw(ctx, data, xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1) {
         // Draw line
@@ -93,5 +94,21 @@
         test([], 0.5, -1.5, 0.5, 3, -1.5, 0, 0.5, 1.5, 0, 0.5);
         test([], 0.5, -1.5, 0.5, 3, -1.5, 0, 0.5, 1.5, 1, 0.5);
         test([], 0.4, -1.5, 0.6, 3, -1.5, 0, 0.5, 1.5, 1, 0.5);
+    });
+
+    group('centroid(data)', detectStaticLineMovingCircle, function draw(ctx, data) {
+        drawPath(ctx, data);
+        ctx.strokeStyle = '#cccccc88';
+        ctx.lineWidth = 0.025;
+        ctx.stroke();
+
+        if (data) {
+            // Draw t
+            drawCircle(ctx, [data[0] * (xc1 - xc0) + xc0, data[0] * (yc1 - yc0) + yc0, data[0] * (r1 - r0) + r0]);
+            ctx.fillStyle = '#444444';
+            ctx.fill();
+        }
+    }, function(test) {
+        test([], [0.5, 0.5, 3, 3, 1, 3, 0.5, 2, 0.5, 0.5]);
     });
 </script>

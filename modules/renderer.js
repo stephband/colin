@@ -168,13 +168,13 @@ function updateObjects(ctx, viewbox, camera, objects, collisions, t0, t1, update
     return updateObjects(ctx, viewbox, camera, objects, collisions, time, t1, update, detect, collide, changes);
 }
 
-function renderObjects(ctx, viewbox, camera, objects, style, t1, renderObject) {
+function renderObjects(ctx, viewbox, camera, objects, style, t1, render) {
     ctx.clearRect.apply(ctx, viewbox);
     const scale = viewbox[2] / camera[2];
     ctx.save();
     ctx.scale(scale, scale);
     ctx.translate(-camera[0], -camera[1]);
-    objects.forEach((object) => renderObject(ctx, camera, style, object, t1));
+    objects.forEach((object) => render(ctx, camera, style, object, t1));
     ctx.restore();
 }
 
@@ -190,7 +190,7 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
     let t0 = 0;
 
     function frame(time) {
-        // We work in seconds
+        // Render up to current time on the next frame, working in seconds
         const t1 = time / 1000;
         collisions.length = 0;
 

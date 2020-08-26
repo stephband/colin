@@ -81,6 +81,8 @@ const detect = overload(toTypes, {
 
 /* Collide */
 
+const forceVector = [];
+
 function collideBallBall(collision) {
     //const point = collision.point;
     const a = collision.objects[0];
@@ -112,8 +114,13 @@ function collideBallBall(collision) {
     b.position.velocity[1] = (sb * cos(angleB - angleAB) * (mb - ma) + 2 * ma * sa * cos(angleA - angleAB)) / (ma + mb) * sin(angleAB) + sb * sin(angleB - angleAB) * sin(angleAB + pi / 2);
 
     // Cue sound
-    const avChange = mag([a.position.velocity[0] - av0, a.position.velocity[1] - av1]);
-    const bvChange = mag([b.position.velocity[0] - bv0, b.position.velocity[1] - bv1]);
+    forceVector[0] = a.position.velocity[0] - av0;
+    forceVector[1] = a.position.velocity[1] - av1;
+    const avChange = mag(forceVector);
+
+    forceVector[0] = b.position.velocity[0] - bv0;
+    forceVector[1] = b.position.velocity[1] - bv1;
+    const bvChange = mag(forceVector);
 
     collide(collision.time, avChange, a);
     collide(collision.time, bvChange, b);
@@ -138,7 +145,10 @@ function collideBallBox(collision) {
     }
 
     // Cue sound
-    const avChange = mag([ball.position.velocity[0] - av0, ball.position.velocity[1] - av1]);
+    forceVector[0] = ball.position.velocity[0] - av0;
+    forceVector[1] = ball.position.velocity[1] - av1;
+    const avChange = mag(forceVector);
+
     collide(collision.time, avChange, ball);
 }
 

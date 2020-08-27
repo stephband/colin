@@ -38,6 +38,8 @@ objects to canvas.
 
 import { deep } from '../../fn/module.js';
 
+const DEBUG = true;
+
 // We can get nasty redetection of already detected collisions. Ignore those on
 // the same object near to 0 time later. DOMHighResTimeStamps should be accurate
 // to 5 µs, according to MDN. This doesn't mean we can't do our collision
@@ -179,6 +181,11 @@ function renderObjects(ctx, viewbox, camera, objects, style, t1, render) {
 }
 
 export function Renderer(canvas, viewbox, update, detect, collide, render, camera, objects) {
+    // Has Renderer been called without `new`? 
+    if (!Renderer.prototype.isPrototypeOf(this)) {
+        return new Renderer(canvas, viewbox, update, detect, collide, render, camera, objects);
+    }
+
     canvas.width  = viewbox[2];
     canvas.height = viewbox[3];
 
@@ -187,34 +194,97 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
     const collisions = [];
     const style      = getComputedStyle(canvas);
 
-    let t0 = 0;
+    // Track state, one of 'stopped', 'playing', 'hidden'
+    let state = 'stopped';
+
+    // Local time in seconds
+    let renderTime = 0;
+
+    // DOM times in seconds
+    let startTime  = undefined;
+    let stopTime   = undefined;
+
+    // Frame id
+    let id;
 
     function frame(time) {
         // Render up to current time on the next frame, working in seconds
-        const t1 = time / 1000;
+        const t0 = renderTime;
+        const t1 = (time / 1000) - startTime;
+
+        // Empty collisions array
         collisions.length = 0;
 
-        //if (DEBUG) { console.group('frame', t1); }
+        //if (DEBUG) { console.group('frame', t0.toFixed(3), t1.toFixed(3)); }
         updateObjects(ctx, viewbox, camera, objects, collisions, t0, t1, update, detect, collide, changes);
         renderObjects(ctx, viewbox, camera, objects, style, t1, render);
         //if (DEBUG) { console.groupEnd(); }
 
         // Cue up next frame
-        t0 = t1;
-        requestAnimationFrame(frame);
+        renderTime = t1;
+        id = requestAnimationFrame(frame);
     }
 
-    return {
-        canvas: canvas,
-
-        start: function() {
-            // We work in seconds
-            t0 = window.performance.now() / 1000;
-            requestAnimationFrame(frame);
-        },
-
-        stop: function() {
-            cancelAnimationFrame(frame);
+    function start(time) {
+        // If we are already started, do nothing
+        if (state === 'playing') {
+            return;
         }
+
+        // We work in seconds
+        startTime = time - renderTime;
+        stopTime  = undefined;
+        state     = 'playing';
+        id = requestAnimationFrame(frame);
+    }
+
+    function stop() {
+        // If we are already stopped, do nothing
+        if (state !== 'playing') {
+            return;
+        }
+
+        // Rendering has already been cued up to renderTime, so use it as stopTime
+        stopTime = startTime + renderTime;
+        state = 'stopped';
+        cancelAnimationFrame(id);
+    }
+
+    this.canvas = canvas;
+
+    this.start = function() {
+        start(window.performance.now() / 1000);
     };
+
+    this.stop = function() {
+        stop();
+    };
+
+    this.timeAtDomTime = function(domTime) {
+        return (domTime / 1000) > stopTime ?
+            renderTime :
+            (domTime / 1000) - startTime ;
+    };
+
+    this.domTimeAtTime = function(time) {
+        return (startTime + time) > stopTime ?
+            1000 * stopTime :
+            1000 * (startTime + time) ;
+    };
+
+    document.addEventListener("visibilitychange", function(e) {
+        if (document.hidden) {
+            if (state === 'playing') {
+                stop();
+
+                // Set state so that next visibilitychange knows to restart
+                state = 'hidden';
+            }
+        }
+        else {
+            if (state === 'hidden') {
+                start(e.timeStamp / 1000);
+            }
+        }
+    });
 }

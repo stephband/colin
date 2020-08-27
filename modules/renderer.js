@@ -130,13 +130,15 @@ function detectCollisions(detect, collisions, t0, t1, objects, objects1) {
         const data = datas[n];
         const a    = datas[n + 1];
         const b    = datas[n + 2];
+
         returns.push({
             // data[0] is the ratio of time from t0 to t1
             time:    data[0] * (t1 - t0) + t0,
-            // Collision [x, y] coordinates
+            // data[1,2] is the collision [x, y] point
             point:   data.slice(1),
             // Sort objects by type alphabetically so our collision identifiers
-            // are sane... but do we want to bake in types in the renderer?
+            // are sane... but do we want to bake in types in the renderer? I 
+            // think maybe not. Maybe though.
             objects: [a, b] //a.type > b.type ? [b, a] : [a, b]
         });
     }
@@ -159,7 +161,7 @@ function updateObjects(ctx, viewbox, camera, objects, collisions, t0, t1, update
     const time = next[0].time;
     changes.length = 0;
 
-    // Update scene state to time
+    // Update muteable scene state to time
     objects.forEach((object) => deep(object, update(t0, time, object)));
 
     // Call collisions and store them
@@ -207,6 +209,13 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
     // Frame id
     let id;
 
+    // Add domTime to collisions... ultimately, we should refactor this
+    // when we have a seperate collision render process
+    function collideProcess(collision) {
+        collision.domTime = domTimeAtTime(collision.time);
+        return collide(collision);
+    }
+
     function frame(time) {
         // Render up to current time on the next frame, working in seconds
         const t0 = renderTime;
@@ -216,8 +225,9 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         collisions.length = 0;
 
         //if (DEBUG) { console.group('frame', t0.toFixed(3), t1.toFixed(3)); }
-        updateObjects(ctx, viewbox, camera, objects, collisions, t0, t1, update, detect, collide, changes);
+        updateObjects(ctx, viewbox, camera, objects, collisions, t0, t1, update, detect, collideProcess, changes);
         renderObjects(ctx, viewbox, camera, objects, style, t1, render);
+        //renderCollisions(ctx, viewbox, camera, collisions, style, t1, render);
         //if (DEBUG) { console.groupEnd(); }
 
         // Cue up next frame
@@ -250,6 +260,18 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         cancelAnimationFrame(id);
     }
 
+    function timeAtDomTime(domTime) {
+        return (domTime / 1000) > stopTime ?
+            renderTime :
+            (domTime / 1000) - startTime ;
+    }
+
+    function domTimeAtTime(time) {
+        return (startTime + time) > stopTime ?
+            1000 * stopTime :
+            1000 * (startTime + time) ;
+    }
+
     this.canvas = canvas;
 
     this.start = function() {
@@ -260,17 +282,8 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         stop();
     };
 
-    this.timeAtDomTime = function(domTime) {
-        return (domTime / 1000) > stopTime ?
-            renderTime :
-            (domTime / 1000) - startTime ;
-    };
-
-    this.domTimeAtTime = function(time) {
-        return (startTime + time) > stopTime ?
-            1000 * stopTime :
-            1000 * (startTime + time) ;
-    };
+    this.timeAtDomTime = timeAtDomTime;
+    this.domTimeAtTime = domTimeAtTime;
 
     document.addEventListener("visibilitychange", function(e) {
         if (document.hidden) {

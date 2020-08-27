@@ -92,8 +92,8 @@ function panFromPosition(x) {
     return (1.6 * x / 720) - 0.8;
 }
 
-export function collide(time, force, ball) {
-    const t = stage.timeAtDomTime(time * 1000);
+export function collide(collision, force, ball) {
+    const t = stage.timeAtDomTime(collision.domTime);
 
     // Clamp to max -12dB
     // node.cue(time, type, note, velocity, duration)

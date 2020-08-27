@@ -122,8 +122,8 @@ function collideBallBall(collision) {
     forceVector[1] = b.position.velocity[1] - bv1;
     const bvChange = mag(forceVector);
 
-    //collide(collision.time, avChange, a);
-    //collide(collision.time, bvChange, b);
+    collide(collision, avChange, a);
+    collide(collision, bvChange, b);
 }
 
 function collideBallBox(collision) {
@@ -149,7 +149,7 @@ function collideBallBox(collision) {
     forceVector[1] = ball.position.velocity[1] - av1;
     const avChange = mag(forceVector);
 
-    //collide(collision.time, avChange, ball);
+    collide(collision, avChange, ball);
 }
 
 const collide = overload((time, force, object) => object.type, {
@@ -169,7 +169,7 @@ const render = overload(getObjectType, {
 
 /* Scene */
 
-const renderer = Renderer(
+const renderer = new Renderer(
     document.getElementById('game-canvas'),
     [0, 0, 720, 405],
     update,
@@ -209,3 +209,5 @@ document.addEventListener('click', function(e) {
         renderer.stop();
     }
 });
+
+window.r = renderer;

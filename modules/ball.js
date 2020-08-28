@@ -17,19 +17,23 @@ const voice = {
         { id: 'gain-1', type: 'gain', data: { gain: 1 }},
         { id: 'harmonic-2',  type: 'tone', data: { type: 'sine', detune: 1200 }},
         { id: 'gain-2', type: 'gain', data: { gain: 0.5 }},
-        { id: 'harmonic-3',  type: 'tone', data: { type: 'sine', detune: 1800 }},
+        { id: 'harmonic-3',  type: 'tone', data: { type: 'sine', detune: 1300 }},
         { id: 'gain-3', type: 'gain', data: { gain: 0.25 }},
-        { id: 'harmonic-4',  type: 'tone', data: { type: 'sine', detune: 2400 }},
+        { id: 'harmonic-4',  type: 'tone', data: { type: 'sine', detune: 2392 }},
         { id: 'gain-4', type: 'gain', data: { gain: 0.125 }},
-        { id: 'harmonic-5',  type: 'tone', data: { type: 'sine', detune: 2700 }},
-        { id: 'gain-5', type: 'gain', data: { gain: 0.0625 }},
-        { id: 'harmonic-6',  type: 'tone', data: { type: 'sine', detune: 3000 }},
-        { id: 'gain-6', type: 'gain', data: { gain: 0.03125 }},
+        { id: 'harmonic-5',  type: 'tone', data: { type: 'sine', detune: 2705 }},
+        { id: 'gain-5', type: 'gain', data: { gain: 0.1625 }},
+        { id: 'harmonic-6',  type: 'tone', data: { type: 'sine', detune: 3012 }},
+        { id: 'gain-6', type: 'gain', data: { gain: 0.05125 }},
         { id: 'envelope', type: 'envelope', data: {
             attack: [
                 [0,     "step",   0],
-                [0.005, "linear", 1],
-                [0.005, "target", 0, 0.1]
+                [0.002, "linear", 1],
+                [0.002, "target", 0, 0.16]
+            ],
+            release: [
+                [0, "step", 1],
+                [0.05, "linear", 0]
             ]
         }},
         { id: 'mix', type: 'mix', data: { gain: 0, pan: 0 }}
@@ -95,10 +99,16 @@ function panFromPosition(x) {
 export function collide(collision, force, ball) {
     const t = stage.timeAtDomTime(collision.domTime);
 
+    // Stopping the previous voice, where it has a short release,
+    // saves on creating a lot of voices
+    if (ball.voice) {
+        ball.voice.stop(t);
+    }
+
     // Clamp to max -12dB
     // node.cue(time, type, note, velocity, duration)
     voiceSettings.pan = panFromPosition(ball.position.value[0]);
-    bonk.start(t + stage.outputLatency + frameDuration, 70 - ball.mass * 6, clamp(0, 0.25, force / 6000), voiceSettings);
+    ball.voice = bonk.start(t + stage.outputLatency + frameDuration, 70 - ball.mass * 6, clamp(0, 0.25, force / 6000), voiceSettings);
 }
 
 

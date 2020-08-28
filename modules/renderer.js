@@ -37,6 +37,7 @@ objects to canvas.
 **/
 
 import { deep } from '../../fn/module.js';
+import Pool from './pool.js';
 
 const DEBUG = true;
 
@@ -60,6 +61,21 @@ function includes(array1, array2) {
 // Internal arrays
 const datas   = [];
 const returns = [];
+
+// Pool collision objects to avoid creating thousands of things 
+// that need to be garbage collected
+const Collision = new Pool(function Collision(time, point, objects) {
+    this.time    = time;
+    this.point   = point;
+    this.objects = objects;
+    this.idle    = false;
+}, function isIdle(collision) {
+    return collision.idle;
+});
+
+function setIdle(collision) {
+    collision.idle = true;
+}
 
 function detectCollisions(detect, collisions, t0, t1, objects, objects1) {
     let i = objects.length;
@@ -131,16 +147,16 @@ function detectCollisions(detect, collisions, t0, t1, objects, objects1) {
         const a    = datas[n + 1];
         const b    = datas[n + 2];
 
-        returns.push({
+        returns.push(Collision(
             // data[0] is the ratio of time from t0 to t1
-            time:    data[0] * (t1 - t0) + t0,
+            data[0] * (t1 - t0) + t0,
             // data[1,2] is the collision [x, y] point
-            point:   data.slice(1),
+            data.slice(1),
             // Sort objects by type alphabetically so our collision identifiers
             // are sane... but do we want to bake in types in the renderer? I 
             // think maybe not. Maybe though.
-            objects: [a, b] //a.type > b.type ? [b, a] : [a, b]
-        });
+            [a, b] //a.type > b.type ? [b, a] : [a, b]
+        ));
     }
 
     return returns;
@@ -222,6 +238,7 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         const t1 = (time / 1000) - startTime;
 
         // Empty collisions array
+        collisions.forEach(setIdle);
         collisions.length = 0;
 
         //if (DEBUG) { console.group('frame', t0.toFixed(3), t1.toFixed(3)); }

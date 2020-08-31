@@ -194,14 +194,14 @@ function updateObjects(ctx, viewbox, camera, objects, collisions, t0, t1, update
     // Get the next collision(s) - if multiple, they must have same time
     const next = detectCollisions(detect, collisions, t0, t1, objects, changes);
 
-    records.push(JSON.stringify({
-        objects: objects,
-        collisions: collisions
-    }, function(key, value) {
-        return value.constructor.name === 'Float64Array' ?
-            Array.from(value) :
-            value;
-    }));
+records.push(JSON.stringify({
+    objects: objects,
+    collisions: collisions
+}, function(key, value) {
+    return value.constructor.name === 'Float64Array' ?
+        Array.from(value) :
+        value;
+}));
 
     if (!next.length) {
         deep(objects, changes);

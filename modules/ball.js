@@ -130,9 +130,11 @@ export function collide(collision, loc0, loc1, ball) {
 
 
 /* Ball */
+var n = 0;
 
 function Ball(x, y, radius, color = '#ff821bbb', vx, vy) {
     this.type     = 'ball';
+    this.id       = this.type + '-' + (n++);
     this.data     = Float64Array.of(0, 0, radius, radius * radius * radius / 8000);
     this.location = Float64Array.of(x, y, 0, 0, vx, vy, 0, 0, 0, 0, 0, 0);
 

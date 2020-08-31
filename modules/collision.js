@@ -439,6 +439,8 @@ const boxCircleCollisions = {
     }
 };
 
+const returns = [];
+
 export function detectBoxCircle(bx, by, bw, bh, x0, y0, r0, x1, y1, r1) {
     // Detects circles colliding with the interior of a box (for just now -
     // exteriors later)
@@ -460,7 +462,13 @@ export function detectBoxCircle(bx, by, bw, bh, x0, y0, r0, x1, y1, r1) {
         return;
     }
 
-    const i = times.indexOf(t);
+    var i = times.length;
+    returns.length = 0;
+    while (i--) {
+        if (t === times[i]) {
+            returns.push.apply(returns, boxCircleCollisions[i](t, bx, by, bw, bh, x0, y0, x1, y1));
+        }
+    }
 
-    return boxCircleCollisions[i](t, bx, by, bw, bh, x0, y0, x1, y1);
+    return returns;
 }

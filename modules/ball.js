@@ -1,5 +1,6 @@
 
-import { clamp, deep, id, overload } from '../../fn/module.js';
+import { clamp, deep, get, id, overload } from '../../fn/module.js';
+import { mag } from './vector.js';
 import { drawCircle } from './canvas.js';
 import { stage } from './stage.js';
 import { register } from '../../soundstage/module.js';
@@ -96,19 +97,34 @@ function panFromPosition(x) {
     return (1.6 * x / 720) - 0.8;
 }
 
-export function collide(collision, force, ball) {
-    const t = stage.timeAtDomTime(collision.domTime);
+const VX = 4;
+const VY = 5;
+const VR = 6;
+
+export function collide(collision, loc0, loc1, ball) {
+    const stageTime = stage.timeAtDomTime(collision.domTime) + stage.outputLatency + frameDuration;
 
     // Stopping the previous voice, where it has a short release,
     // saves on creating a lot of voices
     if (ball.voice) {
-        ball.voice.stop(t);
+        ball.voice.stop(stageTime);
     }
 
-    // Clamp to max -12dB
-    // node.cue(time, type, note, velocity, duration)
+    const vx = loc1[VX] - loc0[VX];
+    const vy = loc1[VY] - loc0[VY];
+    const force = mag(vx, vy);
+
     voiceSettings.pan = panFromPosition(ball.position.value[0]);
-    ball.voice = bonk.start(t + stage.outputLatency + frameDuration, 70 - ball.mass * 6, clamp(0, 0.25, force / 6000), voiceSettings);
+    ball.voice = bonk.start(
+        // time
+        stageTime, 
+        // pitch
+        70 - ball.mass * 6, 
+        // velocity, clamped to -12dB
+        clamp(0, 0.25, force / 6000), 
+        // settings
+        voiceSettings
+    );
 }
 
 
@@ -116,20 +132,18 @@ export function collide(collision, force, ball) {
 /* Ball */
 
 function Ball(x, y, radius, color = '#ff821bbb', vx, vy) {
-    this.data = Float64Array.of(0, 0, radius, radius * radius * radius / 8000);
+    this.type     = 'ball';
+    this.data     = Float64Array.of(0, 0, radius, radius * radius * radius / 8000);
+    this.location = Float64Array.of(x, y, 0, 0, vx, vy, 0, 0, 0, 0, 0, 0);
 
     this.position = {
-        value:        Float64Array.of(x, y),
-        velocity:     Float64Array.of(vx, vy),
-        acceleration: Float64Array.of(0, 0)
+        value:        new Float64Array(this.location.buffer, 0,  2),
+        velocity:     new Float64Array(this.location.buffer, 32, 2),
+        acceleration: new Float64Array(this.location.buffer, 64, 2)
     };
 
     this.color = color;
 }
-
-assign(Ball.prototype, {
-    type: 'ball'
-});
 
 define(Ball.prototype, {
     radius: {

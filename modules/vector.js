@@ -6,14 +6,14 @@ export function copy(vector) {
     );
 }
 
-export function mag(v) {
+export function mag(x, y) {
     // Magnitude of vector
-    return Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+    return Math.sqrt(x * x + y * y);
 }
 
-export function angle(v) {
+export function angle(x, y) {
     // Angle with the x axis
-    return Math.atan2(v[1], v[0]);
+    return Math.atan2(y, x);
 }
 
 export function multiply(n, vector) {

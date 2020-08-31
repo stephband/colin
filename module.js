@@ -84,29 +84,21 @@ const detect = overload(toTypes, {
 const forceVector = [];
 
 function collideBallBall(collision) {
-    //const point = collision.point;
     const a = collision.objects[0];
     const b = collision.objects[1];
-
-    //console.log('Colin: ball - ball collision (simple swap velocities, not very realistic)');
 
     const pa = a.position.value;
     const va = a.position.velocity;
     const pb = b.position.value;
     const vb = b.position.velocity;
 
-    const angleA = angle(va);
-    const angleB = angle(vb);
+    const angleA = angle(va[0], va[1]);
+    const angleB = angle(vb[0], vb[1]);
     const angleAB = Math.atan2(pb[1] - pa[1], pb[0] - pa[0]);
     const ma = 4 * pi * a.data[2];
     const mb = 4 * pi * b.data[2];
-    const sa = mag(va);
-    const sb = mag(vb);
-
-    const av0 = a.position.velocity[0];
-    const av1 = a.position.velocity[1];
-    const bv0 = b.position.velocity[0];
-    const bv1 = b.position.velocity[1];
+    const sa = mag(va[0], va[1]);
+    const sb = mag(vb[0], vb[1]);
 
     a.position.velocity[0] = (sa * cos(angleA - angleAB) * (ma - mb) + 2 * mb * sb * cos(angleB - angleAB)) / (ma + mb) * cos(angleAB) + sa * sin(angleA - angleAB) * cos(angleAB + pi / 2);
     a.position.velocity[1] = (sa * cos(angleA - angleAB) * (ma - mb) + 2 * mb * sb * cos(angleB - angleAB)) / (ma + mb) * sin(angleAB) + sa * sin(angleA - angleAB) * sin(angleAB + pi / 2);
@@ -114,27 +106,16 @@ function collideBallBall(collision) {
     b.position.velocity[1] = (sb * cos(angleB - angleAB) * (mb - ma) + 2 * ma * sa * cos(angleA - angleAB)) / (ma + mb) * sin(angleAB) + sb * sin(angleB - angleAB) * sin(angleAB + pi / 2);
 
     // Cue sound
-    forceVector[0] = a.position.velocity[0] - av0;
-    forceVector[1] = a.position.velocity[1] - av1;
-    const avChange = mag(forceVector);
-
-    forceVector[0] = b.position.velocity[0] - bv0;
-    forceVector[1] = b.position.velocity[1] - bv1;
-    const bvChange = mag(forceVector);
-
-    collide(collision, avChange, a);
-    collide(collision, bvChange, b);
+    collide(collision, collision.a0, a.location, a);
+    collide(collision, collision.b0, b.location, b);
 }
 
 function collideBallBox(collision) {
-    const ball = collision.objects[0];
-    const box  = collision.objects[1];
+    const ball  = collision.objects[0];
+    const box   = collision.objects[1];
 
     const point = collision.point;
     const data  = box.data;
-
-    const av0 = ball.position.velocity[0];
-    const av1 = ball.position.velocity[1];
     
     // A perfectly elastic collision, for now
     if (point[0] === data[0] || point[0] === data[0] + data[2]) {
@@ -144,15 +125,10 @@ function collideBallBox(collision) {
         ball.position.velocity[1] *= -1;
     }
 
-    // Cue sound
-    forceVector[0] = ball.position.velocity[0] - av0;
-    forceVector[1] = ball.position.velocity[1] - av1;
-    const avChange = mag(forceVector);
-
-    collide(collision, avChange, ball);
+    collide(collision, collision.a0, ball.location, ball);
 }
 
-const collide = overload((time, force, object) => object.type, {
+const collide = overload((time, loc0, loc1, object) => object.type, {
     'ball': Ball.collide
 });
 
@@ -165,8 +141,11 @@ const render = overload(getObjectType, {
     'ball': Ball.render,
     'box':  Box.render,
 });
-
-
+/*
+const renderCollision = overload((collision) => , {
+    
+});
+*/
 /* Scene */
 
 const renderer = new Renderer(
@@ -183,15 +162,15 @@ const renderer = new Renderer(
         data: [0, 0, 720, 405]
     }, [
         Box.of(0, 0, 720, 405, true),
-        Ball.of(120, 120, 12, '#ff821bbb', Math.random() * 200, Math.random() * 200),
+        Ball.of(120, 120, 12, '#ff821bbb', -60, -60),
         Ball.of(60,  60,  28, '#ff821bbb', Math.random() * 200, Math.random() * 200),
         Ball.of(360, 120, 18, '#ff821bbb', Math.random() * 200, Math.random() * 200),
         Ball.of(360, 220, 16, '#ff821bbb', Math.random() * 200, Math.random() * 200),
-        //Ball.of(80,  180, 32, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(80,  180, 32, '#ff821bbb', Math.random() * 400, Math.random() * 400),
         Ball.of(430, 330, 50, '#ff821bbb', Math.random() * 400, Math.random() * 400),
-        Ball.of(80,  400, 15, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(80,  300, 15, '#ff821bbb', Math.random() * 400, Math.random() * 400),
         Ball.of(430, 330, 22, '#ee5500',   Math.random() * 400, Math.random() * 400),
-        //Ball.of(480, 70,  30, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(480, 70,  30, '#ff821bbb', Math.random() * 400, Math.random() * 400),
         Ball.of(630, 190, 42, '#ff821bbb', Math.random() * 400, Math.random() * 400),
         Ball.of(280, 180, 38, '#ff821bbb', Math.random() * 400, Math.random() * 400),
         Ball.of(280, 180, 8,  '#ee5500',   Math.random() * 400, Math.random() * 400)

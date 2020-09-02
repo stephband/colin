@@ -110,6 +110,10 @@ export function collide(collision, loc0, loc1, ball) {
         ball.voice.stop(stageTime);
     }
 
+    if (!ball.mass) {
+        return;
+    }
+
     const vx = loc1[VX] - loc0[VX];
     const vy = loc1[VY] - loc0[VY];
     const force = mag(vx, vy);
@@ -145,6 +149,11 @@ function Ball(x, y, radius, color = '#ff821bbb', vx, vy) {
     };
 
     this.color = color;
+
+    // Non-enumerable properties are not JSONified
+    define(this, {
+        voice: { writable: true, value: undefined }
+    });
 }
 
 define(Ball.prototype, {
@@ -198,9 +207,9 @@ const updateValue = overload((object) => typeof object.value, {
 
         let n = -1;
         while(++n in data.value) {
-            data.velocity[n] = (object.acceleration ? object.acceleration[n] : 0) * duration;
+            data.velocity[n]  = (object.acceleration ? object.acceleration[n] : 0) * duration;
             data.velocity[n] += (object.velocity ? object.velocity[n] : 0);
-            data.value[n] = object.value[n] + data.velocity[n] * duration;
+            data.value[n]     = object.value[n] + data.velocity[n] * duration;
         }
 
         return data;

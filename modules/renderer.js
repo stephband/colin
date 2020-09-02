@@ -36,7 +36,7 @@ then render(ctx, camera, style, object, time) is called to render the updated
 objects to canvas.
 **/
 
-import { deep, noop, overload } from '../../fn/module.js';
+import { deep, get, noop, overload } from '../../fn/module.js';
 import { toKey } from '../../dom/module.js';
 import events from '../../dom/modules/events.js';
 import Pool from './pool.js';
@@ -44,6 +44,7 @@ import Pool from './pool.js';
 const DEBUG = true;
 
 const assign = Object.assign;
+const abs    = Math.abs;
 
 // We can get nasty redetection of already detected collisions. Ignore those on
 // the same object near to 0 time later. DOMHighResTimeStamps should be accurate
@@ -63,13 +64,15 @@ function includes(array1, array2) {
 }
 
 // Internal arrays
-const datas   = [];
 const returns = [];
 
 // Pool collision objects to avoid creating thousands of things 
 // that need to be garbage collected
+let n = 0;
+
 const Collision = new Pool(
     function Collision(time, point, a, b) {
+        this.count      = ++n;
         this.time       = time;
         this.point      = point;
 
@@ -94,8 +97,25 @@ function setIdle(collision) {
     collision.idle = true;
 }
 
+function floatsToArray(key, value) {
+    return value.constructor.name === 'Float64Array' ?
+        Array.from(value) :
+        value;
+}
+
+function arrayToFloats(key, value){
+    // the reviver function looks for the typed array flag
+    if (typeof value === 'object' && "0" in value && typeof value[0] === 'number') {
+        // if found, we convert it back to a typed array
+        const v = Float64Array.from(value);
+        return v;
+    }
+
+  // if flag not found no conversion is done
+  return value;
+}
+
 function detectCollisions(detect, collisions, t0, t1, objects, objects1) {
-    datas.length = 0;
     returns.length = 0;
 
     // Cycle through objects from end to start
@@ -128,16 +148,6 @@ function detectCollisions(detect, collisions, t0, t1, objects, objects1) {
                 continue;
             }
 
-            // Ignore collisions with the same object that are
-            // less than a given age
-            if (collisions.find((collision) => (
-                t0 - collision.time < minSameObjectCollisionTime
-                && collision.objects.includes(objectA0)
-                && collision.objects.includes(objectB0)
-            ))) {
-                continue;
-            }
-
             const data = detect(objectA0, objectA1, objectB0, objectB1);
 
             // If collision data is not detected
@@ -145,82 +155,133 @@ function detectCollisions(detect, collisions, t0, t1, objects, objects1) {
                 continue;
             }
 
+            // data[0] is the ratio of time from t0 to t1
+            const time = data[0] * (t1 - t0) + t0;
+var c;
+            // Have we detected the same collision again, but with rounding errors?
+            // The time and/or position (as it is based on time) may be very slightly not 
+            // the same on the next iteration, so this crap is about detecting very similar
+            // collisions and ignoring them... I wish there were a better way
+            if ((c = collisions.find((collision) => (
+                // Same objects
+                collision.objects[0] === objectA0
+                && collision.objects[1] === objectB0
+                // At roughly the same time
+                && collision.time < time + minSameObjectCollisionTime
+                // With roughly the same collision point
+                && abs(collision.point[0]) < abs(data[1]) + minSameObjectCollisionTime
+                && abs(collision.point[1]) < abs(data[2]) + minSameObjectCollisionTime
+            )))) {
+                // I'm very surprised by how many similar collisions there are...
+                // console.log('Ignore collision', c.time === time, c.time, time, c.point[0], data[1], data[2], c.point[1]);
+                continue;
+            }
+
             // Manage the returned collisions
-            if (datas[0]) {
-                if (data[0] === datas[0][0]) {
-                    datas.push(data, objectA0, objectB0);
+            if (returns[0]) {
+                if (time > returns[0].time) {
+                    continue;
                 }
-                else if (data[0] < datas[0][0]) {
-                    datas.length = 0;
-                    datas.push(data, objectA0, objectB0);
+
+                if (time < returns[0].time) {
+                    returns.forEach(setIdle);
+                    returns.length = 0;
                 }
             }
-            else {
-                datas.push(data, objectA0, objectB0);
+
+            // If data has multiple collision points, create multiple collisions
+            let l = data.length;
+            while(l) {
+                l -= 3;
+                returns.push(Collision(
+                    time,
+                    // data[1,2] is the collision [x, y] point
+                    data.slice(l + 1, l + 3),
+                    // Todo? Sort objects by type alphabetically so our collision identifiers
+                    // are sane... but do we want to bake in types in the renderer? I 
+                    // think maybe not. Maybe though.
+                    objectA0, 
+                    objectB0
+                ));
             }
-        }
-    }
-
-    let n = datas.length;
-    while((n -= 3) > -1) {
-        const data = datas[n];
-        const a    = datas[n + 1];
-        const b    = datas[n + 2];
-
-        // If data has multiple collision points, create multiple collisions
-        let l = data.length;
-        while(l) {
-            l = l - 3;
-            returns.push(Collision(
-                // data[0] is the ratio of time from t0 to t1
-                data[0] * (t1 - t0) + t0,
-                // data[1,2] is the collision [x, y] point
-                data.slice(l + 1, l + 3),
-                // Sort objects by type alphabetically so our collision identifiers
-                // are sane... but do we want to bake in types in the renderer? I 
-                // think maybe not. Maybe though.
-                a, b //a.type > b.type ? [b, a] : [a, b]
-            ));
         }
     }
 
     return returns;
 }
 
-function updateObjects(ctx, viewbox, camera, objects, collisions, t0, t1, update, detect, collide, changes = []) {
+function updateObject1(update, object, t0, t1, objects1, i) {
+    const object1 = update(t0, t1, object);
+
+    if (object1.position) {
+        if (!objects1[i]) {
+            objects1[i] = {
+                position: {
+                    value: Float64Array.of(0, 0),
+                    velocity: Float64Array.of(0, 0),
+                    acceleration: Float64Array.of(0, 0) 
+                }
+            };
+        }
+
+        objects1[i].position.value[0] = object1.position.value[0];
+        objects1[i].position.value[1] = object1.position.value[1];
+        objects1[i].position.velocity[0] = object1.position.velocity[0];
+        objects1[i].position.velocity[1] = object1.position.velocity[1];
+        objects1[i].position.acceleration[0] = object1.position.acceleration[0];
+        objects1[i].position.acceleration[1] = object1.position.acceleration[1];
+    }
+    else {
+        if (!objects1[i]) {
+            objects1[i] = {};
+        }
+
+        delete objects1[i].position;
+    }
+}
+
+function updateObjects(ctx, viewbox, camera, objects0, collisions, t0, t1, update, detect, collide, objects1 = []) {
+    // Sanity check t0 against t1, shouldn't happen except may be true 
+    // if latest collision was exactly at t1
+    if (t0 >= t1) { return; }
+
     // Copy scene updates to t1 to objects[1]
-    objects.forEach((object, i) => changes[i] = deep(changes[i] || {}, update(t0, t1, object)));
+    objects0.forEach((object, i) => updateObject1(update, object, t0, t1, objects1, i));
 
     // Get the next collision(s) - if multiple, they must have same time
-    const next = detectCollisions(detect, collisions, t0, t1, objects, changes);
-
-records.push(JSON.stringify({
-    objects: objects,
-    collisions: collisions
-}, function(key, value) {
-    return value.constructor.name === 'Float64Array' ?
-        Array.from(value) :
-        value;
-}));
+    const next = detectCollisions(detect, collisions, t0, t1, objects0, objects1);
 
     if (!next.length) {
-        deep(objects, changes);
-        changes.length = 0;
+        deep(objects0, objects1);
+        objects1.length = 0;
         return;
     }
 
     const time = next[0].time;
-    changes.length = 0;
+
+    // Record state
+    const record = {
+        t0:   t0,
+        t1:   t1,
+        time: time,
+        objects0:   JSON.parse(JSON.stringify(objects0, floatsToArray), arrayToFloats), 
+        objects1:   JSON.parse(JSON.stringify(objects1, floatsToArray), arrayToFloats),
+        collisions: JSON.parse(JSON.stringify(next, floatsToArray), arrayToFloats)
+    };
+
+    records.push(record);
 
     // Update muteable scene state to time
-    objects.forEach((object) => deep(object, update(t0, time, object)));
+    objects0.forEach((object) => deep(object, update(t0, time, object)));
+
+    record.objects = JSON.parse(JSON.stringify(objects0, floatsToArray), arrayToFloats);
 
     // Call collisions and store them
     next.forEach(collide);
     collisions.push.apply(collisions, next);
 
-    // Keep going (until no more collisions are found in frame)
-    return updateObjects(ctx, viewbox, camera, objects, collisions, time, t1, update, detect, collide, changes);
+    objects1.length = 0;
+    return updateObjects(ctx, viewbox, camera, objects0, collisions, time, t1, update, detect, collide, objects1);
 }
 
 function renderObjects(ctx, viewbox, camera, objects, collisions, style, t1, renderObject, renderCollision) {
@@ -234,8 +295,53 @@ function renderObjects(ctx, viewbox, camera, objects, collisions, style, t1, ren
     ctx.restore();
 }
 
+function renderObjectsGhost(ctx, viewbox, camera, objects, collisions, style, t1, renderObject, renderCollision) {
+    const scale = viewbox[2] / camera[2];
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.translate(-camera[0], -camera[1]);
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.globalAlpha = 0.2;
+    objects.forEach((object) => renderObject(ctx, camera, style, object, t1));
+    //collisions.forEach((collision) => renderCollision(collision));
+    ctx.restore();
+}
+
+function renderPoint(ctx, viewbox, camera, point) {
+    const scale = viewbox[2] / camera[2];
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.translate(-camera[0], -camera[1]);
+    ctx.beginPath();
+    ctx.moveTo(point[0], point[1] - 3);
+    ctx.lineTo(point[0], point[1] + 3);
+    ctx.moveTo(point[0] - 3, point[1]);
+    ctx.lineTo(point[0] + 3, point[1]);
+    ctx.stroke();
+    ctx.restore();
+}
+
 let recordIndex = 0;
 window.records = [];
+
+function renderRecord(ctx, viewbox, camera, collisions, style, time, render, record) {
+    collisions.length = 0;
+    // At collision time
+    renderObjects(ctx, viewbox, camera, record.objects, collisions, style, time, render, noop);
+    // At t0
+    renderObjectsGhost(ctx, viewbox, camera, record.objects0, collisions, style, time, render, noop);
+    // At t1
+    deep(record.objects0, record.objects1);
+    renderObjectsGhost(ctx, viewbox, camera, record.objects0, collisions, style, time, render, noop);
+    // Collisions
+    record.collisions.forEach((collision) => renderPoint(ctx, viewbox, camera, collision.point));
+    // Log data
+    //record = parseRecordJSON(json);
+
+    console.log('frame: ' + record.t1.toFixed(3));
+    console.log(record.collisions[0].time, record.collisions.reduce((string, collision) => string + collision.objects.map(get('type')).join('-'), ''));
+    console.log(record, JSON.stringify(record.objects0, floatsToArray));
+}
 
 export function Renderer(canvas, viewbox, update, detect, collide, render, camera, objects) {
     // Has Renderer been called without `new`? 
@@ -373,21 +479,7 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
             if (state === 'playing') { return; }
             const json = records[recordIndex];
             if (!json) { return; }
-            const record = JSON.parse(json, function(key, value){
-                // the reviver function looks for the typed array flag
-                if (typeof value === 'object' && "0" in value && typeof value[0] === 'number') {
-                    // if found, we convert it back to a typed array
-                    const v = Float64Array.from(value);
-                    return v;
-                }
-
-              // if flag not found no conversion is done
-              return value;
-            });
-
-            collisions.length = 0;
-            renderObjects(ctx, viewbox, camera, record.objects, collisions, style, renderTime, render, noop);
-            console.log(record.objects, record.collisions);
+            renderRecord(ctx, viewbox, camera, collisions, style, renderTime, render, json);
         },
 
         'right': function(e) {
@@ -396,21 +488,7 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
             ++recordIndex;
             const json = records[recordIndex];
             if (!json) { return; }
-            const record = JSON.parse(json, function(key, value){
-                // the reviver function looks for the typed array flag
-                if (typeof value === 'object' && "0" in value && typeof value[0] === 'number') {
-                    // if found, we convert it back to a typed array
-                    const v = Float64Array.from(value);
-                    return v;
-                }
-
-              // if flag not found no conversion is done
-              return value;
-            });
-
-            collisions.length = 0;
-            renderObjects(ctx, viewbox, camera, record.objects, collisions, style, renderTime, render, noop);
-            console.log(record.objects, record.collisions);
+            renderRecord(ctx, viewbox, camera, collisions, style, renderTime, render, json);
         },
 
         'default': noop

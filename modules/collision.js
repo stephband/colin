@@ -26,12 +26,12 @@ function timeAtPoint(x0, y0, x1, y1, xp, yp) {
 }
 
 function min0To1(a, b) {
-    // Get the min of a and b in the range 0 - 1
-    return a >= 0 && a < 1 ?
-        b >= 0 && b < 1 ?
+    // Get the min of a and b in the range 0 > n >= 1
+    return a > 0 && a <= 1 ?
+        b > 0 && b <= 1 ?
             min(a, b) :
             a :
-        b >= 0 && b < 1 ?
+        b > 0 && b <= 1 ?
             b :
             undefined ;
 }

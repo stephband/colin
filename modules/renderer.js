@@ -173,7 +173,7 @@ var c;
                 && abs(collision.point[1]) < abs(data[2]) + minSameObjectCollisionTime
             )))) {
                 // I'm very surprised by how many similar collisions there are...
-                // console.log('Ignore collision', c.time === time, c.time, time, c.point[0], data[1], data[2], c.point[1]);
+// console.log('Ignore collision', c.time === time, c.time, time, c.point[0], data[1], data[2], c.point[1]);
                 continue;
             }
 
@@ -365,8 +365,8 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
     let renderTime = 0;
 
     // DOM times in seconds
-    let startTime  = undefined;
-    let stopTime   = undefined;
+    let startTime = undefined;
+    let stopTime  = undefined;
 
     // Frame id
     let id;
@@ -457,7 +457,6 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         if (document.hidden) {
             if (state === 'playing') {
                 stop();
-
                 // Set state so that next visibilitychange knows to restart
                 state = 'hidden';
             }
@@ -472,6 +471,8 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
 
 
 
+
+    // 
     events('keydown', document)
     .each(overload(toKey, {
         'left': function(e) {

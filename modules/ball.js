@@ -94,7 +94,7 @@ const voiceSettings = {};
 
 function panFromPosition(x) {
     // Avoid hard l/r panning
-    return (1.6 * x / 720) - 0.8;
+    return (1.6 * x / 1440) - 0.8;
 }
 
 const VX = 4;

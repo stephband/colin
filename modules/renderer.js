@@ -313,10 +313,11 @@ function renderPoint(ctx, viewbox, camera, point) {
     ctx.scale(scale, scale);
     ctx.translate(-camera[0], -camera[1]);
     ctx.beginPath();
-    ctx.moveTo(point[0], point[1] - 3);
-    ctx.lineTo(point[0], point[1] + 3);
-    ctx.moveTo(point[0] - 3, point[1]);
-    ctx.lineTo(point[0] + 3, point[1]);
+    ctx.moveTo(point[0], point[1] - 5);
+    ctx.lineTo(point[0], point[1] + 5);
+    ctx.moveTo(point[0] - 5, point[1]);
+    ctx.lineTo(point[0] + 5, point[1]);
+    ctx.lineWidth = 1;
     ctx.stroke();
     ctx.restore();
 }
@@ -331,8 +332,8 @@ function renderRecord(ctx, viewbox, camera, collisions, style, time, render, rec
     // At t0
     renderObjectsGhost(ctx, viewbox, camera, record.objects0, collisions, style, time, render, noop);
     // At t1
-    deep(record.objects0, record.objects1);
-    renderObjectsGhost(ctx, viewbox, camera, record.objects0, collisions, style, time, render, noop);
+    const objects0 = deep(JSON.parse(JSON.stringify(record.objects0, floatsToArray), arrayToFloats), record.objects1);
+    renderObjectsGhost(ctx, viewbox, camera, objects0, collisions, style, time, render, noop);
     // Collisions
     record.collisions.forEach((collision) => renderPoint(ctx, viewbox, camera, collision.point));
     // Log data
@@ -424,7 +425,7 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         cancelAnimationFrame(id);
 
         if (DEBUG) { console.log('Colin: renderer stop'); }
-        recordIndex = records.length - 1;
+        recordIndex = records.length;
     }
 
     function timeAtDomTime(domTime) {
@@ -474,18 +475,26 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
     events('keydown', document)
     .each(overload(toKey, {
         'left': function(e) {
-            // If we are already stopped, do nothing
-            --recordIndex;
+            // If we are playing do nothing
             if (state === 'playing') { return; }
+            --recordIndex;
+            if (recordIndex < 0) {
+                recordIndex = 0;
+                return;
+            }
             const json = records[recordIndex];
             if (!json) { return; }
             renderRecord(ctx, viewbox, camera, collisions, style, renderTime, render, json);
         },
 
         'right': function(e) {
-            // If we are already stopped, do nothing
+            // If we are playing do nothing
             if (state === 'playing') { return; }
             ++recordIndex;
+            if (recordIndex > records.length - 1) {
+                recordIndex = records.length - 1;
+                return;
+            }
             const json = records[recordIndex];
             if (!json) { return; }
             renderRecord(ctx, viewbox, camera, collisions, style, renderTime, render, json);

@@ -32,8 +32,8 @@ const pi   = Math.PI;
 const minSameObjectCollisionTime = 10e-12;
 
 const canvas  = document.getElementById('game-canvas');
-canvas.width  = 720;
-canvas.height = 405;
+canvas.width  = 1440;
+canvas.height = 810;
 const ctx     = canvas.getContext('2d');
 const style   = getComputedStyle(canvas);
 

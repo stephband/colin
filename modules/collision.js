@@ -414,7 +414,7 @@ export function detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, 
     const ybt = t * (yb1 - yb0) + yb0;
     const rat = t * (ra1 - ra0) + ra0;
     const rbt = t * (rb1 - rb0) + rb0;
-    const ratio = rbt / rat;
+    const ratio = rat / rbt;
     const xt = ratio * (xbt - xat) + xat;
     const yt = ratio * (ybt - yat) + yat;
 

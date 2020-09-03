@@ -151,7 +151,7 @@ const renderCollision = overload((collision) => , {
 
 const renderer = new Renderer(
     document.getElementById('game-canvas'),
-    [0, 0, 720, 405],
+    [0, 0, 1440, 810],
     update,
     detect,
     overload((collision) => collision.objects.sort(by(get('type'))).map(get('type')).join('-'), {
@@ -160,9 +160,9 @@ const renderer = new Renderer(
     }),
     render, {
         type: 'camera',
-        data: [0, 0, 720, 405]
+        data: [0, 0, 1440, 810]
     },
-    [{"type":"box","data":[0,0,720,405,1]},
+    [{"type":"box","data":[0,0,1440,810,1]},
      /*{"type":"ball","id":"ball-0","data":[0,0,12,0.216],"location":[155.57768062151595,161.2236988462426,0,0,136.29101593439216,-84.5794692396083,0,0,0,0,0,0],"position":{"value":[702.9052109952653,312.1953735935019],"velocity":[-94.86679932383126,80.18296041148977],"acceleration":[0,0]},"color":"#ff821bbb"},
      {"type":"ball","id":"ball-1","data":[0,0,28,2.744],"location":[40.668502240125676,280.4705663239919,0,0,-18.93132165657687,-147.5888030868764,0,0,0,0,0,0],"position":{"value":[466.0860572183268,243.47475820584333],"velocity":[-181.96704043191852,-95.5575249173161],"acceleration":[0,0]},"color":"red"},
      {"type":"ball","id":"ball-2","data":[0,0,18,0.729],"location":[195.3021336024733,16445.52358084418,0,0,306.28014619726173,122.21623388219382,0,0,0,0,0,0],"position":{"value":[4225.514372555522,36067.7129345658],"velocity":[306.28014619726173,122.21623388219382],"acceleration":[0,0]},"color":"green"},

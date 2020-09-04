@@ -166,7 +166,7 @@ var c;
                 && abs(collision.point[1]) < abs(data[2]) + minSameObjectCollisionTime
             )))) {
                 // I'm very surprised by how many similar collisions there are...
-console.log('Ignore collision  t:', data[0] < minSameObjectCollisionTime, data[0], minSameObjectCollisionTime);
+console.log('Ignore collision  t:', data[0] < minSameObjectCollisionTime, data[0], minSameObjectCollisionTime, last.length);
 console.log(' previous collision:', c.time, c.point[0], c.point[1]);
 console.log('      new collision:', data[0] * (t1 - t0) + t0, data[1], data[2]);
                 continue;
@@ -509,35 +509,36 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
 
 
 
+    if (DEBUG) {
+        events('keydown', document)
+        .each(overload(toKey, {
+            'left': function(e) {
+                // If we are playing do nothing
+                if (state === 'playing') { return; }
+                --recordIndex;
+                if (recordIndex < 0) {
+                    recordIndex = 0;
+                    return;
+                }
+                const json = records[recordIndex];
+                if (!json) { return; }
+                renderRecord(ctx, viewbox, camera, collisions, style, renderTime, render, json);
+            },
 
-    events('keydown', document)
-    .each(overload(toKey, {
-        'left': function(e) {
-            // If we are playing do nothing
-            if (state === 'playing') { return; }
-            --recordIndex;
-            if (recordIndex < 0) {
-                recordIndex = 0;
-                return;
-            }
-            const json = records[recordIndex];
-            if (!json) { return; }
-            renderRecord(ctx, viewbox, camera, collisions, style, renderTime, render, json);
-        },
+            'right': function(e) {
+                // If we are playing do nothing
+                if (state === 'playing') { return; }
+                ++recordIndex;
+                if (recordIndex > records.length - 1) {
+                    recordIndex = records.length - 1;
+                    return;
+                }
+                const json = records[recordIndex];
+                if (!json) { return; }
+                renderRecord(ctx, viewbox, camera, collisions, style, renderTime, render, json);
+            },
 
-        'right': function(e) {
-            // If we are playing do nothing
-            if (state === 'playing') { return; }
-            ++recordIndex;
-            if (recordIndex > records.length - 1) {
-                recordIndex = records.length - 1;
-                return;
-            }
-            const json = records[recordIndex];
-            if (!json) { return; }
-            renderRecord(ctx, viewbox, camera, collisions, style, renderTime, render, json);
-        },
-
-        'default': noop
-    }));
+            'default': noop
+        }));
+    }
 }

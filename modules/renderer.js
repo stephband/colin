@@ -52,7 +52,7 @@ const abs    = Math.abs;
 // calculations at higher resolution, though. We don't want to unnecessarily
 // miss collisions. That's the risk, here, i wish there were a better way, hmmm...
 // https://developer.mozilla.org/en-US/docs/Web/API/DOMHighResTimeStamp
-const minSameObjectCollisionTime = 10e-12;
+const minSameObjectCollisionTime = 1e-12;
 
 function includes(array1, array2) {
     let n = array1.length;
@@ -63,15 +63,12 @@ function includes(array1, array2) {
     }
 }
 
-// Internal arrays
-const returns = [];
-
 // Pool collision objects to avoid creating thousands of things 
 // that need to be garbage collected
 let n = 0;
 
 const Collision = new Pool(
-    function Collision(time, point, a, b) {
+    function Collision(time, a, b, point) {
         this.count      = ++n;
         this.time       = time;
         this.point      = point;
@@ -115,9 +112,7 @@ function arrayToFloats(key, value){
   return value;
 }
 
-function detectCollisions(detect, collisions, t0, t1, objects, objects1) {
-    returns.length = 0;
-
+function detectCollisions(detect, collisions, t0, t1, objects, objects1, last, next) {
     // Cycle through objects from end to start
     let i = objects.length;
     while (--i) {
@@ -155,14 +150,12 @@ function detectCollisions(detect, collisions, t0, t1, objects, objects1) {
                 continue;
             }
 
-            // data[0] is the ratio of time from t0 to t1
-            const time = data[0] * (t1 - t0) + t0;
 var c;
             // Have we detected the same collision again, but with rounding errors?
             // The time and/or position (as it is based on time) may be very slightly not 
             // the same on the next iteration, so this crap is about detecting very similar
             // collisions and ignoring them... I wish there were a better way
-            if ((c = collisions.find((collision) => (
+            if ((c = last.find((collision) => (
                 // Within a rounding error of t0
                 data[0] < minSameObjectCollisionTime
                 // Same objects
@@ -173,43 +166,62 @@ var c;
                 && abs(collision.point[1]) < abs(data[2]) + minSameObjectCollisionTime
             )))) {
                 // I'm very surprised by how many similar collisions there are...
-console.log('Ignore collision', c.time === time, c.time, c.point[0], c.point[1]);
-console.log('                ', '    ',   time, data[1],    data[2]);
-console.log('                ', data[0]);
+console.log('Ignore collision  t:', data[0] < minSameObjectCollisionTime, data[0], minSameObjectCollisionTime);
+console.log(' previous collision:', c.time, c.point[0], c.point[1]);
+console.log('      new collision:', data[0] * (t1 - t0) + t0, data[1], data[2]);
                 continue;
             }
 
+            // data[0] is the ratio of time from t0 to t1
+            const time = data[0] * (t1 - t0) + t0;
+
             // Manage the returned collisions
-            if (returns[0]) {
-                if (time > returns[0].time) {
+            if (next[0]) {
+                if (time > next[0].time) {
                     continue;
                 }
 
-                if (time < returns[0].time) {
-                    returns.forEach(setIdle);
-                    returns.length = 0;
+                if (time < next[0].time) {
+                    next.forEach(setIdle);
+                    next.length = 0;
                 }
             }
 
             // If data has multiple collision points, create multiple collisions
             let l = data.length;
             while(l) {
-                l -= 3;
-                returns.push(Collision(
+                l -= 9;
+                next.push(Collision(
                     time,
-                    // data[1,2] is the collision [x, y] point
-                    data.slice(l + 1, l + 3),
                     // Todo? Sort objects by type alphabetically so our collision identifiers
                     // are sane... but do we want to bake in types in the renderer? I 
                     // think maybe not. Maybe though.
                     objectA0, 
-                    objectB0
+                    objectB0,
+                    // Collision point
+                    data.slice(l + 1, l + 3)
                 ));
+
+                // Set collision positional data on objects. We rely on detected data
+                // for positions at collision time because if we recalculate from t0
+                // we get rounding errors that increase the number of duplicate 
+                // collisions twenty-fold or so
+                //
+                // Data is [t, xp, yp, xa, ya, ra, xb, yb, rb]
+                objectA0.position && (objectA0.position.value[0] = data[3]);
+                objectA0.position && (objectA0.position.value[1] = data[4]);
+                objectA0.rotation && (objectA0.rotation.value = data[5]);
+                objectA0.updateTime = time;
+
+                objectB0.position && (objectB0.position.value[0] = data[6]);
+                objectB0.position && (objectB0.position.value[1] = data[7]);
+                objectB0.rotation && (objectB0.rotation.value = data[8]);
+                objectB0.updateTime = time;
             }
         }
     }
 
-    return returns;
+    return next;
 }
 
 function updateObject1(update, object, t0, t1, objects1, i) {
@@ -242,7 +254,7 @@ function updateObject1(update, object, t0, t1, objects1, i) {
     }
 }
 
-function updateObjects(ctx, viewbox, camera, objects0, collisions, t0, t1, update, detect, collide, objects1 = []) {
+function updateObjects(ctx, viewbox, camera, objects0, collisions, t0, t1, update, detect, collide, objects1, last, next) {
     // Sanity check t0 against t1, shouldn't happen except may be true 
     // if latest collision was exactly at t1
     if (t0 >= t1) { return; }
@@ -251,7 +263,8 @@ function updateObjects(ctx, viewbox, camera, objects0, collisions, t0, t1, updat
     objects0.forEach((object, i) => updateObject1(update, object, t0, t1, objects1, i));
 
     // Get the next collision(s) - if multiple, they must have same time
-    const next = detectCollisions(detect, collisions, t0, t1, objects0, objects1);
+    next.length = 0;
+    next = detectCollisions(detect, collisions, t0, t1, objects0, objects1, last, next);
 
     if (!next.length) {
         deep(objects0, objects1);
@@ -261,29 +274,43 @@ function updateObjects(ctx, viewbox, camera, objects0, collisions, t0, t1, updat
 
     const time = next[0].time;
 
-    // Record state
-    const record = {
-        t0:   t0,
-        t1:   t1,
-        time: time,
-        objects0:   JSON.parse(JSON.stringify(objects0, floatsToArray), arrayToFloats), 
-        objects1:   JSON.parse(JSON.stringify(objects1, floatsToArray), arrayToFloats),
-        collisions: JSON.parse(JSON.stringify(next, floatsToArray), arrayToFloats)
-    };
+    if (DEBUG) {
+        // Record state
+        var record = {
+            t0:   t0,
+            t1:   t1,
+            time: time,
+            objects0:   JSON.parse(JSON.stringify(objects0, floatsToArray), arrayToFloats), 
+            objects1:   JSON.parse(JSON.stringify(objects1, floatsToArray), arrayToFloats),
+            collisions: JSON.parse(JSON.stringify(next, floatsToArray), arrayToFloats)
+        };
 
-    records.push(record);
+        records.push(record);
+    }
 
     // Update muteable scene state to time
-    objects0.forEach((object) => deep(object, update(t0, time, object)));
+    objects0.forEach((object) => {
+        // If object has already been updated to time or beyond do nothing
+        if (time <= object.updateTime) {
+            return;
+        }
 
-    record.objects = JSON.parse(JSON.stringify(objects0, floatsToArray), arrayToFloats);
+        deep(object, update(t0, time, object));
+        object.updateTime = time;
+    });
+
+    if (DEBUG) {
+        record.objects = JSON.parse(JSON.stringify(objects0, floatsToArray), arrayToFloats);
+    }
 
     // Call collisions and store them
     next.forEach(collide);
     collisions.push.apply(collisions, next);
 
     objects1.length = 0;
-    return updateObjects(ctx, viewbox, camera, objects0, collisions, time, t1, update, detect, collide, objects1);
+
+    // Swap next and last each iteration to reuse buffers
+    return updateObjects(ctx, viewbox, camera, objects0, collisions, time, t1, update, detect, collide, objects1, next, last);
 }
 
 function renderObjects(ctx, viewbox, camera, objects, collisions, style, t1, renderObject, renderCollision) {
@@ -341,7 +368,7 @@ function renderRecord(ctx, viewbox, camera, collisions, style, time, render, rec
     // Log data
     //record = parseRecordJSON(json);
 
-    console.log('frame: ' + record.t1.toFixed(3), 'collisions:', record.collision.length);
+    console.log('frame: ' + record.t1.toFixed(3), 'collisions:', record.collisions.length);
     console.log(record.collisions[0].time, record.collisions.reduce((string, collision) => string + collision.objects.map(get('type')).join('-'), ''));
     console.log(record, JSON.stringify(record.objects, floatsToArray));
 }
@@ -358,6 +385,9 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
     const ctx        = canvas.getContext('2d');
     const changes    = [];
     const collisions = [];
+    const last       = [];
+    const next       = [];
+    const objects1   = [];
     const style      = getComputedStyle(canvas);
 
     // Track state, one of 'stopped', 'playing', 'hidden'
@@ -389,9 +419,11 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         // Empty collisions array
         collisions.forEach(setIdle);
         collisions.length = 0;
+        last.length = 0;
+        next.length = 0;
 
         //if (DEBUG) { console.group('frame', t0.toFixed(3), t1.toFixed(3)); }
-        updateObjects(ctx, viewbox, camera, objects, collisions, t0, t1, update, detect, collideProcess, changes);
+        updateObjects(ctx, viewbox, camera, objects, collisions, t0, t1, update, detect, collideProcess, changes, objects1, last, next);
         renderObjects(ctx, viewbox, camera, objects, collisions, style, t1, render, noop);
         //if (DEBUG) { console.groupEnd(); }
 
@@ -412,7 +444,9 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         state     = 'playing';
         id = requestAnimationFrame(frame);
 
-        if (DEBUG) { console.log('Colin: renderer start'); }
+        if (DEBUG) {
+            console.log('Colin: renderer start');
+        }
     }
 
     function stop() {
@@ -426,8 +460,10 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         state = 'stopped';
         cancelAnimationFrame(id);
 
-        if (DEBUG) { console.log('Colin: renderer stop'); }
-        recordIndex = records.length;
+        if (DEBUG) {
+            recordIndex = records.length;
+            console.log('Colin: renderer stop');
+        }
     }
 
     function timeAtDomTime(domTime) {
@@ -474,7 +510,6 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
 
 
 
-    // 
     events('keydown', document)
     .each(overload(toKey, {
         'left': function(e) {

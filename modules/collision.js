@@ -373,6 +373,21 @@ export function detectCirclePoint(xc0, yc0, r0, xc1, yc1, r1, xp0, yp0, xp1, yp1
     return Float64Array.of(t, xpt, ypt);
 }
 
+const Buffer = (function(buffer) {
+    return function collision(t, xp, yp, xa, ya, ra, xb, yb, rb) {
+        buffer[0] = t;
+        buffer[1] = xp;
+        buffer[2] = yp;
+        buffer[3] = xa;
+        buffer[4] = ya;
+        buffer[5] = ra;
+        buffer[6] = xb;
+        buffer[7] = yb;
+        buffer[8] = rb;
+        return buffer;
+    }
+})(new Float64Array(9));
+
 export function detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, xb1, yb1, rb1) {
     const xa   = xa1 - xa0;
     const xb   = xb1 - xb0;
@@ -421,27 +436,45 @@ export function detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, 
     const xt = ratio * (xbt - xat) + xat;
     const yt = ratio * (ybt - yat) + yat;
 
-    return Float64Array.of(t, xt, yt);
-
-    // Return positional data
-    // return Float64Array.of(t, xt, yt, xat, yat, rat, xbt, ybt, rbt);
+    // Time, xp, yp, xa, ya, ra, xb, yb, rb
+    return Buffer(t, xt, yt, xat, yat, rat, xbt, ybt, rbt);
 }
 
 const boxCircleCollisions = {
-    0: function xmin(t, bx, by, bw, bh, x0, y0, x1, y1) {
-        return Float64Array.of(t, bx, t * (y1 - y0) + y0);
+    0: function xmin(t, bx, by, bw, bh, x0, y0, r0, x1, y1, r1) {
+        const xp = bx;
+        const yp = t * (y1 - y0) + y0;
+        const rb = t * (r1 - r0) + r0;
+        const xb = xp + rb;
+        // Time, xp, yp, xa, ya, ra, xb, yb, rb
+        return Buffer(t, xp, yp, bx, by, 0, xb, yp, rb);
     },
 
-    1: function xmax(t, bx, by, bw, bh, x0, y0, x1, y1) {
-        return Float64Array.of(t, bx + bw, t * (y1 - y0) + y0);
+    1: function xmax(t, bx, by, bw, bh, x0, y0, r0, x1, y1, r1) {
+        const xp = bx + bw;
+        const yp = t * (y1 - y0) + y0;
+        const rb = t * (r1 - r0) + r0;
+        const xb = xp - rb;
+        // Time, xp, yp, xa, ya, ra, xb, yb, rb
+        return Buffer(t, xp, yp, bx, by, 0, xb, yp, rb);
     },
 
-    2: function ymin(t, bx, by, bw, bh, x0, y0, x1, y1) {
-        return Float64Array.of(t, t * (x1 - x0) + x0, by);
+    2: function ymin(t, bx, by, bw, bh, x0, y0, r0, x1, y1, r1) {
+        const xp = t * (x1 - x0) + x0;
+        const yp = by;
+        const rb = t * (r1 - r0) + r0;
+        const yb = yp + rb;
+        // Time, xp, yp, xa, ya, ra, xb, yb, rb
+        return Buffer(t, xp, yp, bx, by, 0, xp, yb, rb);
     },
 
-    3: function ymax(t, bx, by, bw, bh, x0, y0, x1, y1) {
-        return Float64Array.of(t, t * (x1 - x0) + x0, by + bh);
+    3: function ymax(t, bx, by, bw, bh, x0, y0, r0, x1, y1, r1) {
+        const xp = t * (x1 - x0) + x0;
+        const yp = by + bh;
+        const rb = t * (r1 - r0) + r0;
+        const yb = yp - rb;        
+        // Time, xp, yp, xa, ya, ra, xb, yb, rb
+        return Buffer(t, xp, yp, bx, by, 0, xp, yb, rb);
     }
 };
 
@@ -472,7 +505,7 @@ export function detectBoxCircle(bx, by, bw, bh, x0, y0, r0, x1, y1, r1) {
     returns.length = 0;
     while (i--) {
         if (t === times[i]) {
-            returns.push.apply(returns, boxCircleCollisions[i](t, bx, by, bw, bh, x0, y0, x1, y1));
+            returns.push.apply(returns, boxCircleCollisions[i](t, bx, by, bw, bh, x0, y0, r0, x1, y1, r1));
         }
     }
 

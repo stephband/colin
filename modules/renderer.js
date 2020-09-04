@@ -163,17 +163,19 @@ var c;
             // the same on the next iteration, so this crap is about detecting very similar
             // collisions and ignoring them... I wish there were a better way
             if ((c = collisions.find((collision) => (
+                // Within a rounding error of t0
+                data[0] < minSameObjectCollisionTime
                 // Same objects
-                collision.objects[0] === objectA0
+                && collision.objects[0] === objectA0
                 && collision.objects[1] === objectB0
-                // At roughly the same time
-                && collision.time < time + minSameObjectCollisionTime
                 // With roughly the same collision point
                 && abs(collision.point[0]) < abs(data[1]) + minSameObjectCollisionTime
                 && abs(collision.point[1]) < abs(data[2]) + minSameObjectCollisionTime
             )))) {
                 // I'm very surprised by how many similar collisions there are...
-// console.log('Ignore collision', c.time === time, c.time, time, c.point[0], data[1], data[2], c.point[1]);
+console.log('Ignore collision', c.time === time, c.time, c.point[0], c.point[1]);
+console.log('                ', '    ',   time, data[1],    data[2]);
+console.log('                ', data[0]);
                 continue;
             }
 
@@ -339,9 +341,9 @@ function renderRecord(ctx, viewbox, camera, collisions, style, time, render, rec
     // Log data
     //record = parseRecordJSON(json);
 
-    console.log('frame: ' + record.t1.toFixed(3));
+    console.log('frame: ' + record.t1.toFixed(3), 'collisions:', record.collision.length);
     console.log(record.collisions[0].time, record.collisions.reduce((string, collision) => string + collision.objects.map(get('type')).join('-'), ''));
-    console.log(record, JSON.stringify(record.objects0, floatsToArray));
+    console.log(record, JSON.stringify(record.objects, floatsToArray));
 }
 
 export function Renderer(canvas, viewbox, update, detect, collide, render, camera, objects) {

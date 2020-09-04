@@ -162,7 +162,7 @@ const renderer = new Renderer(
         type: 'camera',
         data: [0, 0, 1440, 810]
     },
-    [{"type":"box","data":[0,0,1440,810,1]},
+    /*[{"type":"box","data":[0,0,1440,810,1]},
      /*{"type":"ball","id":"ball-0","data":[0,0,12,0.216],"location":[155.57768062151595,161.2236988462426,0,0,136.29101593439216,-84.5794692396083,0,0,0,0,0,0],"position":{"value":[702.9052109952653,312.1953735935019],"velocity":[-94.86679932383126,80.18296041148977],"acceleration":[0,0]},"color":"#ff821bbb"},
      {"type":"ball","id":"ball-1","data":[0,0,28,2.744],"location":[40.668502240125676,280.4705663239919,0,0,-18.93132165657687,-147.5888030868764,0,0,0,0,0,0],"position":{"value":[466.0860572183268,243.47475820584333],"velocity":[-181.96704043191852,-95.5575249173161],"acceleration":[0,0]},"color":"red"},
      {"type":"ball","id":"ball-2","data":[0,0,18,0.729],"location":[195.3021336024733,16445.52358084418,0,0,306.28014619726173,122.21623388219382,0,0,0,0,0,0],"position":{"value":[4225.514372555522,36067.7129345658],"velocity":[306.28014619726173,122.21623388219382],"acceleration":[0,0]},"color":"green"},
@@ -175,23 +175,23 @@ const renderer = new Renderer(
      {"type":"ball","id":"ball-9","data":[0,0,42,9.261],"location":[285.8804022165778,256.5175119977409,0,0,110.17712104651797,-55.04010248867548,0,0,0,0,0,0],"position":{"value":[296.15939388629823,339.3755939538847],"velocity":[-29.409890264560907,-74.34145193571788],"acceleration":[0,0]},"color":"#ff821bbb"},
      {"type":"ball","id":"ball-10","data":[0,0,38,6.859],"location":[370.07774008721395,87.58227888758925,0,0,141.9806829038278,73.80994029399488,0,0,0,0,0,0],"position":{"value":[133.69802371719302,343.55447869512517],"velocity":[-194.6031478984271,202.8184060964742],"acceleration":[0,0]},"color":"#ff821bbb"},
      {"type":"ball","id":"ball-11","data":[0,0,8,0.064],"location":[706.4323771573953,350.2871433437842,0,0,93.32639209560938,-613.1291512131813,0,0,0,0,0,0],"position":{"value":[113.91124591343387,389.2958414487303],"velocity":[314.07107288418615,49.25129520272094],"acceleration":[0,0]},"color":"#ee5500"}
-     */ Ball.of(133.69802371719302, 343.55447869512517, 38, 'red', -194.6031478984271, 202.8184060964742),
+      Ball.of(133.69802371719302, 343.55447869512517, 38, 'red', -194.6031478984271, 202.8184060964742),
         Ball.of(113.91124591343387, 389.2958414487303, 8, 'yellow', 314.07107288418615, 49.25129520272094)
-    ]    /*[
-        Box.of(0, 0, 720, 405, true),
-        Ball.of(120, 120, 12, '#ff821bbb', -60, -60),
-        Ball.of(60,  60,  28, 'red', Math.random() * 200, Math.random() * 200),
-        Ball.of(360, 120, 18, 'green', Math.random() * 200, Math.random() * 200),
-        Ball.of(360, 220, 16, 'blue', Math.random() * 200, Math.random() * 200),
-        Ball.of(80,  180, 32, 'cyan', Math.random() * 400, Math.random() * 400),
-        Ball.of(430, 330, 50, 'purple', Math.random() * 400, Math.random() * 400),
-        Ball.of(80,  300, 15, '#ff821bbb', Math.random() * 400, Math.random() * 400),
-        Ball.of(430, 330, 22, '#ee5500',   Math.random() * 400, Math.random() * 400),
-        Ball.of(480, 70,  30, '#ff821bbb', Math.random() * 400, Math.random() * 400),
-        Ball.of(630, 190, 42, '#ff821bbb', Math.random() * 400, Math.random() * 400),
-        Ball.of(280, 180, 38, '#ff821bbb', Math.random() * 400, Math.random() * 400),
-        Ball.of(280, 180, 8,  '#ee5500',   Math.random() * 400, Math.random() * 400)
-    ]*/
+    ]*/    [
+        Box.of(0, 0, 1440, 810, true),
+        Ball.of(620, 620, 24, '#ff821bbb', -60, -60),
+        Ball.of(60,  60,  56, 'red', Math.random() * 200, Math.random() * 200),
+        /*Ball.of(860, 420, 36, 'green', Math.random() * 200, Math.random() * 200),
+        Ball.of(960, 220, 32, 'blue', Math.random() * 200, Math.random() * 200),
+        Ball.of(80,  180, 64, 'cyan', Math.random() * 400, Math.random() * 400),
+        Ball.of(430, 330, 100, 'purple', Math.random() * 400, Math.random() * 400),
+        Ball.of(80,  300, 30, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(430, 330, 44, '#ee5500',   Math.random() * 400, Math.random() * 400),
+        Ball.of(480, 70,  60, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(630, 190, 82, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(280, 180, 76, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(280, 180, 16,  '#ee5500',   Math.random() * 400, Math.random() * 400)*/
+    ]
 );
 
 var n = false;

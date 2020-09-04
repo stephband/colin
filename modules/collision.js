@@ -355,7 +355,8 @@ export function detectCirclePoint(xc0, yc0, r0, xc1, yc1, r1, xp0, yp0, xp1, yp1
     if (t === undefined) {
         return;
     }
-    else if (t === 0) {
+
+    if (t === 0) {
         return Float64Array.of(t, xp0, yp0);
     }
 
@@ -396,16 +397,18 @@ export function detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, 
     const c = xba0 * xba0 + yba0 * yba0 - rab0 * rab0;
     const t = timeAtQuadratic(a, b, c);
 
-    if (t === undefined) {
+    if (!t) {
         return;
     }
 
+    /*
     if (t === 0) {
         const ratio = rb0 / ra0;
         const xt = ratio * (xb0 - xa0) + xa0;
         const yt = ratio * (yb0 - ya0) + ya0;
         return Float64Array.of(t, xt, yt);
     }
+    */
 
     //console.log(t, xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, xb1, yb1, rb1);
     const xat = t * (xa1 - xa0) + xa0;
@@ -419,6 +422,9 @@ export function detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, 
     const yt = ratio * (ybt - yat) + yat;
 
     return Float64Array.of(t, xt, yt);
+
+    // Return positional data
+    // return Float64Array.of(t, xt, yt, xat, yat, rat, xbt, ybt, rbt);
 }
 
 const boxCircleCollisions = {

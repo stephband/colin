@@ -151,6 +151,7 @@ function detectCollisions(detect, collisions, t0, t1, objects, objects1, last, n
             }
 
 var c;
+
             // Have we detected the same collision again, but with rounding errors?
             // The time and/or position (as it is based on time) may be very slightly not 
             // the same on the next iteration, so this crap is about detecting very similar
@@ -166,9 +167,22 @@ var c;
                 && abs(collision.point[1]) < abs(data[2]) + minSameObjectCollisionTime
             )))) {
                 // I'm very surprised by how many similar collisions there are...
-console.log('Ignore collision  t:', data[0] < minSameObjectCollisionTime, data[0], minSameObjectCollisionTime, last.length);
-console.log(' previous collision:', c.time, c.point[0], c.point[1]);
-console.log('      new collision:', data[0] * (t1 - t0) + t0, data[1], data[2]);
+console.log('Ignore collision t:', data[0] < minSameObjectCollisionTime, data[0], minSameObjectCollisionTime, last.length);
+console.log('previous collision:', c.time, c.point[0], c.point[1]);
+console.log('     new collision:', data[0] * (t1 - t0) + t0, data[1], data[2]);
+
+                if (DEBUG) {
+                    // Record state
+                    records.push({
+                        t0:         t0,
+                        t1:         t1,
+                        time:       data[0] * (t1 - t0) + t0,
+                        objects0:   JSON.parse(JSON.stringify(objects0, floatsToArray), arrayToFloats), 
+                        objects1:   JSON.parse(JSON.stringify(objects1, floatsToArray), arrayToFloats),
+                        collisions: JSON.parse(JSON.stringify(next, floatsToArray), arrayToFloats)
+                    });
+                }
+
                 continue;
             }
 

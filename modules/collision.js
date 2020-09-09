@@ -412,9 +412,7 @@ export function detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, 
     const c = xba0 * xba0 + yba0 * yba0 - rab0 * rab0;
     const t = timeAtQuadratic(a, b, c);
 
-    if (!t) {
-        return;
-    }
+    if (!t) { return; }
 
     /*
     if (t === 0) {
@@ -432,12 +430,14 @@ export function detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, 
     const ybt = t * (yb1 - yb0) + yb0;
     const rat = t * (ra1 - ra0) + ra0;
     const rbt = t * (rb1 - rb0) + rb0;
-    const ratio = rat / rbt;
-    const xt = ratio * (xbt - xat) + xat;
-    const yt = ratio * (ybt - yat) + yat;
+    const ratio = inside ?
+          rat / (rat - rbt) :
+          rat / (rat + rbt) ;
+    const xp = ratio * (xbt - xat) + xat;
+    const yp = ratio * (ybt - yat) + yat;
 
     // Time, xp, yp, xa, ya, ra, xb, yb, rb
-    return Buffer(t, xt, yt, xat, yat, rat, xbt, ybt, rbt);
+    return Buffer(t, xp, yp, xat, yat, rat, xbt, ybt, rbt);
 }
 
 const boxCircleCollisions = {

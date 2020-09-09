@@ -52,7 +52,7 @@ const abs    = Math.abs;
 // calculations at higher resolution, though. We don't want to unnecessarily
 // miss collisions. That's the risk, here, i wish there were a better way, hmmm...
 // https://developer.mozilla.org/en-US/docs/Web/API/DOMHighResTimeStamp
-const minSameObjectCollisionTime = 1e-12;
+const minSameObjectCollisionTime = 1e-9;
 
 function includes(array1, array2) {
     let n = array1.length;
@@ -68,7 +68,7 @@ function includes(array1, array2) {
 let n = 0;
 
 const Collision = new Pool(
-    function Collision(time, a, b, point, data) {
+    function Collision(time, a, b, point, data, t) {
         this.count      = ++n;
         this.time       = time;
         this.point      = point;
@@ -80,6 +80,10 @@ const Collision = new Pool(
         this.a0 = this.a0 || new Float64Array(12);
         this.b0 = this.b0 || new Float64Array(12);
         this.data = data;
+
+        if (DEBUG) {
+            this.t = t;
+        }
 
         assign(this.a0, a.location);
         assign(this.b0, b.location);
@@ -146,7 +150,7 @@ function detectCollisions(detect, collisions, t0, t1, objects, objects1, last, n
 
             const data = detect(objectA0, objectA1, objectB0, objectB1);
 
-// console.log(objectB0.color, data, objectB0.position && JSON.stringify(objectB0.position.value, floatsToArray), objectB1.position && JSON.stringify(objectB1.position.value, floatsToArray));
+//console.log(objectB0.color, data, objectB0.position && JSON.stringify(objectB0.position.value, floatsToArray), objectB1.position && JSON.stringify(objectB1.position.value, floatsToArray));
 
             // If collision data is not detected
             if (!data) {
@@ -226,7 +230,8 @@ function detectCollisions(detect, collisions, t0, t1, objects, objects1, last, n
                     // Collision point
                     data.slice(l + 1, l + 3),
                     // Position data for a and b
-                    data.slice(l + 3)
+                    data.slice(l + 3),
+                    data[0]
                 ));
             }
         }
@@ -309,9 +314,9 @@ function updateObjects(ctx, viewbox, camera, objects0, collisions, t0, t1, updat
         // Set collision positional data on objects. We rely on detected data
         // for positions at collision time because if we recalculate from t0
         // we get rounding errors that increase the number of duplicate 
-        // collisions that must be filtered twenty-fold or so
+        // collisions that must be filtered - by about twenty-fold or so
         //
-        // Data is [t, xp, yp, xa, ya, ra, xb, yb, rb]
+        // Data here is [xa, ya, ra, xb, yb, rb]
         objectA.position && (objectA.position.value[0] = data[0]);
         objectA.position && (objectA.position.value[1] = data[1]);
         objectA.rotation && (objectA.rotation.value    = data[2]);
@@ -380,6 +385,9 @@ function renderPoint(ctx, viewbox, camera, point) {
     ctx.moveTo(point[0] - 5, point[1]);
     ctx.lineTo(point[0] + 5, point[1]);
     ctx.lineWidth = 1;
+    ctx.font = '9px sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(point.map(Math.round).join(', '), point[0] + 7, point[1]);
     ctx.stroke();
     ctx.restore();
 }
@@ -397,12 +405,17 @@ function renderRecord(ctx, viewbox, camera, collisions, style, time, render, rec
     const objects0 = deep(JSON.parse(JSON.stringify(record.objects0, floatsToArray), arrayToFloats), record.objects1);
     renderObjectsGhost(ctx, viewbox, camera, objects0, collisions, style, time, render, noop);
     // Collisions
-    record.collisions.forEach((collision) => collision.point && renderPoint(ctx, viewbox, camera, collision.point));
+    record.collisions.forEach((collision) => {
+        collision.point && renderPoint(ctx, viewbox, camera, collision.point);
+        collision.data  && renderPoint(ctx, viewbox, camera, collision.data.slice(0,2));
+        collision.data  && renderPoint(ctx, viewbox, camera, collision.data.slice(3,5));
+    });
+
     // Log data
     //record = parseRecordJSON(json);
 
     console.log('frame: ' + record.t1.toFixed(3), 'collisions:', record.collisions.length);
-    console.log(record.time, record.collisions.reduce((string, collision) => string + collision.objects.map(get('type')).join('-'), ''));
+    console.log(record.time, record.collisions.reduce((string, collision) => string + (collision.objects ? collision.objects.map(get('type')).join('-') : 'Ignored'), ''));
     console.log(record, JSON.stringify(record.objects, floatsToArray));
 }
 

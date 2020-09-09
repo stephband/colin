@@ -142,11 +142,8 @@ const render = overload(getObjectType, {
     'ball': Ball.render,
     'box':  Box.render,
 });
-/*
-const renderCollision = overload((collision) => , {
-    
-});
-*/
+
+
 /* Scene */
 
 const renderer = new Renderer(
@@ -161,8 +158,7 @@ const renderer = new Renderer(
     render, {
         type: 'camera',
         data: [0, 0, 1440, 810]
-    },
-    [
+    }, [
         Ball.of(620, 620, 24, '#ff821bbb', -60, -60),
         Ball.of(60,  60,  56, 'red', 300, 100),
         Ball.of(860, 420, 36, 'green', 100, 300),

@@ -6,8 +6,11 @@ import { stage } from './stage.js';
 import { register } from '../../soundstage/module.js';
 import Instrument from '../../soundstage/nodes/instrument.js';
 
+const DEBUG  = true;
+
 const assign = Object.assign;
 const define = Object.defineProperties;
+
 
 /* Sound */
 
@@ -89,6 +92,11 @@ const bonk   = stage.createNode('bonk', {
 
 stage.createConnector(bonk, output);
 
+if (DEBUG) {
+    window.bonk = bonk;
+    document.getElementById('instrument').audioNode = bonk.node;
+}
+
 // Reusable object for cueing voices
 const voiceSettings = {};
 
@@ -114,12 +122,12 @@ export function collide(collision, loc0, loc1, ball) {
         return;
     }
 
-    const vx = loc1[VX] - loc0[VX];
-    const vy = loc1[VY] - loc0[VY];
+    const vx    = loc1[VX] - loc0[VX];
+    const vy    = loc1[VY] - loc0[VY];
     const force = mag(vx, vy);
 
     voiceSettings.pan = panFromPosition(ball.position.value[0]);
-    ball.voice = bonk.start(
+    ball.voice  = bonk.start(
         // time
         stageTime, 
         // pitch
@@ -132,8 +140,8 @@ export function collide(collision, loc0, loc1, ball) {
 }
 
 
-
 /* Ball */
+
 var n = 0;
 
 function Ball(x, y, radius, color = '#ff821bbb', vx, vy) {
@@ -217,8 +225,8 @@ const updateValue = overload((object) => typeof object.value, {
 });
 
 
-
 // Return value for update
+
 const object1 = {};
 
 export function update(t0, t1, ball) {

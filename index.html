@@ -222,6 +222,11 @@ body > .controls-block {
 <div id="game-message" hidden></div>
 <div id="game-stats" hidden></div>
 
+<soundstage-instrument id="instrument"></soundstage-instrument>
+
 <script type="module">
+    import SoundstageInstrument from '../soundstage/elements/soundstage-instrument.js';
     import './module.js';
+
+    SoundstageInstrument.template = '/bolt/elements/range-control.html#range-control';
 </script>

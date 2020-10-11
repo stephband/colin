@@ -34,13 +34,29 @@ const voice = {
         { id: 'envelope', type: 'envelope', data: {
             attack: [
                 [0,     "step",   0],
-                [0.0012, "linear", 1],
+                [0.0018, "linear", 1],
                 [0.002, "target", 0, 0.16]
             ],
             release: [
                 [0, "step", 1],
                 [0.05, "linear", 0]
             ]
+        }, control: {
+            start: {
+                // min -48dB
+                gain: {
+                    // scale in dB/oct, min and max are output clamps on the
+                    // resulting gain value
+                    1: { type: 'scale', scale: -6, min: 0, max: 2 },
+                    2: { type: 'logarithmic', min: 0.00390625, max: 1 }
+                },
+
+                rate: {
+                    // scale in dB/oct, min and max are output clamps on the
+                    // resulting gain value
+                    1: { type: 'scale', scale: 1, min: 0.125, max: 8 }
+                }
+            }
         }},
         { id: 'mix', type: 'mix', data: { gain: 0, pan: 0 }}
     ],

@@ -77,10 +77,13 @@ body > .controls-block {
 }
     
 body > soundstage-instrument {
+    box-sizing: border-box;
     position: fixed;
     top: 0.9375rem;
     right: 0.9375rem;
-    
+    max-height: calc(100vh - 1.875rem);
+    overflow: auto;
+
     --background: linear-gradient(to bottom, #555555ee 0%, #333333ee 100%);
     -webkit-backdrop-filter: blur(0.375rem);
             backdrop-filter: blur(0.375rem); 

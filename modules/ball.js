@@ -85,6 +85,8 @@ const voice = {
         }
     },
 
+    __stop: ['envelope'],
+
     properties: {
         pan: 'mix.pan'
     },

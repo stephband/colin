@@ -146,8 +146,10 @@ const render = overload(getObjectType, {
 
 /* Scene */
 
+const canvas = document.getElementById('game-canvas');
+
 const renderer = new Renderer(
-    document.getElementById('game-canvas'),
+    canvas,
     [0, 0, 1440, 810],
     update,
     detect,
@@ -178,6 +180,10 @@ const renderer = new Renderer(
 var n = false;
 
 document.addEventListener('click', function(e) {
+    if (e.target !== canvas) {
+        return;
+    }
+
     n = !n;
     if (n) {
         renderer.start();

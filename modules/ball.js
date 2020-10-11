@@ -17,22 +17,24 @@ const define = Object.defineProperties;
 const frameDuration = 1 / 60;
 const voice = {
     nodes: [
-        { id: 'harmonic-1',  type: 'tone', data: { type: 'sine', detune: 0 }},
+        // https://en.wikipedia.org/wiki/Natural_frequency
+
+        { id: 'harmonic-1',  type: 'tone', data: { type: 'triangle', detune: 0 }},
         { id: 'gain-1', type: 'gain', data: { gain: 1 }},
-        { id: 'harmonic-2',  type: 'tone', data: { type: 'sine', detune: 1200 }},
-        { id: 'gain-2', type: 'gain', data: { gain: 0.5 }},
-        { id: 'harmonic-3',  type: 'tone', data: { type: 'sine', detune: 1300 }},
-        { id: 'gain-3', type: 'gain', data: { gain: 0.25 }},
-        { id: 'harmonic-4',  type: 'tone', data: { type: 'sine', detune: 2392 }},
-        { id: 'gain-4', type: 'gain', data: { gain: 0.125 }},
-        { id: 'harmonic-5',  type: 'tone', data: { type: 'sine', detune: 2705 }},
-        { id: 'gain-5', type: 'gain', data: { gain: 0.1625 }},
+        { id: 'harmonic-2',  type: 'tone', data: { type: 'sine', detune: 1233.4459459459463 }},
+        { id: 'gain-2', type: 'gain', data: { gain: 0.7361961570945943 }},
+        { id: 'harmonic-3',  type: 'tone', data: { type: 'sine', detune: 1895.2702702702704 }},
+        { id: 'gain-3', type: 'gain', data: { gain: 0.3135029560810816 }},
+        { id: 'harmonic-4',  type: 'tone', data: { type: 'sine', detune: 5170.945945945947 }},
+        { id: 'gain-4', type: 'gain', data: { gain: 0.08 }},
+        { id: 'harmonic-5',  type: 'tone', data: { type: 'triangle', detune: 1189 }},
+        { id: 'gain-5', type: 'gain', data: { gain: 0.607 }},
         { id: 'harmonic-6',  type: 'tone', data: { type: 'sine', detune: 3012 }},
         { id: 'gain-6', type: 'gain', data: { gain: 0.05125 }},
         { id: 'envelope', type: 'envelope', data: {
             attack: [
                 [0,     "step",   0],
-                [0.002, "linear", 1],
+                [0.0012, "linear", 1],
                 [0.002, "target", 0, 0.16]
             ],
             release: [
@@ -68,7 +70,18 @@ const voice = {
         'harmonic-6': { frequency: { 1: { type: 'none' }}},
         'envelope': {
             // min -48dB
-            gain: { 2: { type: 'logarithmic', min: 0.00390625, max: 1 }}
+            gain: {
+                // scale in dB/oct, min and max are output clamps on the
+                // resulting gain value
+                1: { type: 'scale', scale: -6, min: 0, max: 2 },
+                2: { type: 'logarithmic', min: 0.00390625, max: 1 }
+            },
+
+            rate: {
+                // scale in dB/oct, min and max are output clamps on the
+                // resulting gain value
+                1: { type: 'scale', scale: 1, min: 0.125, max: 8 }
+            }
         }
     },
 
@@ -129,11 +142,22 @@ export function collide(collision, loc0, loc1, ball) {
     voiceSettings.pan = panFromPosition(ball.position.value[0]);
     ball.voice  = bonk.start(
         // time
-        stageTime, 
-        // pitch
-        70 - ball.mass * 6, 
+        stageTime,
+
+        // frequency
+        // https://en.wikipedia.org/wiki/Natural_frequency
+        //
+        // In a mass-spring system, with mass m and spring stiffness k, 
+        // the natural frequency can be calculated as:
+        //
+        // f = root(k / m)
+        //
+        // Where k is a stiffness constant.
+        Math.pow(380000 / ball.mass, 0.5) + 'Hz', 
+
         // velocity, clamped to -12dB
         clamp(0, 0.25, force / 6000), 
+
         // settings
         voiceSettings
     );
@@ -147,7 +171,7 @@ var n = 0;
 function Ball(x, y, radius, color = '#ff821bbb', vx, vy) {
     this.type     = 'ball';
     this.id       = this.type + '-' + (n++);
-    this.data     = Float64Array.of(0, 0, radius, radius * radius * radius / 8000);
+    this.data     = Float64Array.of(0, 0, radius, radius * radius * radius / 7200);
     this.location = Float64Array.of(x, y, 0, 0, vx, vy, 0, 0, 0, 0, 0, 0);
 
     this.position = {

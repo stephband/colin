@@ -1,4 +1,8 @@
 
+<script title="config">
+    window.customElementStylesheetPath = '/bolt/elements/';
+</script>
+
 <link rel="stylesheet" href="../bolt/style.min.css"></link>
 
 <style>
@@ -70,6 +74,20 @@ body > .controls-block {
     margin: auto 2rem 1rem auto;
     position: relative;
     z-index: 2;
+}
+    
+body > soundstage-instrument {
+    position: fixed;
+    top: 0.9375rem;
+    right: 0.9375rem;
+    
+    --background: linear-gradient(to bottom, #555555ee 0%, #333333ee 100%);
+    -webkit-backdrop-filter: blur(0.375rem);
+            backdrop-filter: blur(0.375rem); 
+}
+    
+body > soundstage-instrument:focus-within {    
+    --background: linear-gradient(to bottom, #555555 0%, #333333 100%);;
 }
 
 #game-canvas {

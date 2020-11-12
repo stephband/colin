@@ -247,7 +247,44 @@ body > soundstage-instrument:focus-within {
 
 <script type="module">
     import SoundstageInstrument from '../soundstage/elements/soundstage-instrument.js';
-    import './module.js';
+    import { Scene } from './module.js';
+
+    // Scene
+    const canvas = document.getElementById('game-canvas');
+
+    const scene = Scene([
+        Ball.of(620, 620, 24, '#ff821bbb', -60, -60),
+        Ball.of(60,  60,  56, 'red', 300, 100),
+        Ball.of(860, 420, 36, 'green', 100, 300),
+        Ball.of(960, 220, 32, 'blue', Math.random() * 200, Math.random() * 200),
+        Ball.of(80,  180, 64, 'cyan', Math.random() * 400, Math.random() * 400),
+        Ball.of(430, 330, 100, 'purple', Math.random() * 400, Math.random() * 400),
+        Ball.of(80,  300, 30, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(430, 330, 44, '#ee5500',   Math.random() * 400, Math.random() * 400),
+        Ball.of(480, 70,  60, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(630, 190, 82, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(280, 180, 76, '#ff821bbb', Math.random() * 400, Math.random() * 400),
+        Ball.of(280, 180, 16,  '#ee5500',   Math.random() * 400, Math.random() * 400),
+        Box.of(0, 0, 1440, 810, true)
+    ], [0, 0, 1440, 810], canvas);
+
+
+    // Controls
+    var n = false;
+    
+    document.addEventListener('click', function(e) {
+        if (e.target !== canvas) {
+            return;
+        }
+    
+        n = !n;
+        if (n) {
+            renderer.start();
+        }
+        else {
+            renderer.stop();
+        }
+    });
 
     SoundstageInstrument.template = '/bolt/elements/range-control.html#range-control';
 </script>

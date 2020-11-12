@@ -2,6 +2,9 @@
 import { clamp, deep, get, id, overload } from '../../fn/module.js';
 import { mag } from './vector.js';
 import { drawCircle } from './canvas.js';
+import { stage } from './stage.js';
+import { register } from '../../soundstage/module.js';
+import Instrument from '../../soundstage/nodes/instrument.js';
 
 const DEBUG  = true;
 
@@ -106,7 +109,7 @@ const voice = {
 
     output: 'mix'
 };
-/*
+
 register('bonk', function(context) {
     return new Instrument(context, {
         voice: voice
@@ -132,18 +135,16 @@ function panFromPosition(x) {
     // Avoid hard l/r panning
     return (1.6 * x / 1440) - 0.8;
 }
-*/
+
 const VX = 4;
 const VY = 5;
 const VR = 6;
 
 export function collide(collision, loc0, loc1, ball) {
-    /*
     const stageTime = stage.timeAtDomTime(collision.domTime) + stage.outputLatency + frameDuration;
 
     // Stopping the previous voice, where it has a short release,
     // saves on creating a lot of voices
-    
     if (ball.voice) {
         ball.voice.stop(stageTime);
     }
@@ -178,7 +179,6 @@ export function collide(collision, loc0, loc1, ball) {
         // settings
         voiceSettings
     );
-    */
 }
 
 
@@ -201,11 +201,9 @@ function Ball(x, y, radius, color = '#ff821bbb', vx, vy) {
     this.color = color;
 
     // Non-enumerable properties are not JSONified
-    /*
     define(this, {
         voice: { writable: true, value: undefined }
     });
-    */
 }
 
 define(Ball.prototype, {

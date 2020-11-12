@@ -41,9 +41,10 @@ import { toKey } from '../../dom/module.js';
 import events from '../../dom/modules/events.js';
 import Pool from './pool.js';
 
-const DEBUG = true;
+const DEBUG = false;//true;
 
 const assign = Object.assign;
+const define = Object.defineProperties;
 const abs    = Math.abs;
 
 // We can get nasty redetection of already detected collisions. Ignore those on
@@ -428,6 +429,7 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
     canvas.width  = viewbox[2];
     canvas.height = viewbox[3];
 
+    const renderer   = this;
     const ctx        = canvas.getContext('2d');
     const changes    = [];
     const collisions = [];
@@ -443,8 +445,8 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
     let renderTime = 0;
 
     // DOM times in seconds
-    let startTime = undefined;
-    let stopTime  = undefined;
+    this.startTime = undefined;
+    this.stopTime  = undefined;
 
     // Frame id
     let id;
@@ -462,7 +464,7 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         // DOM time, so when start() is called the first frame is older than
         // startTime. If I'm honest, I still don't fully grok this. Essentially 
         // it's the time of the previous rendered frame.
-        if (time / 1000 > startTime) {
+        if (time / 1000 > renderer.startTime) {
             return frame(time);
         }
 
@@ -473,7 +475,7 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
     function frame(time) {
         // Render up to current time on the next frame, working in seconds
         const t0 = renderTime;
-        const t1 = (time / 1000) - startTime;
+        const t1 = (time / 1000) - renderer.startTime;
 
         if (t1 < t0) {  }
 
@@ -500,8 +502,8 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         }
 
         // We work in seconds
-        startTime = time - renderTime;
-        stopTime  = undefined;
+        renderer.startTime = time - renderTime;
+        renderer.stopTime  = undefined;
         state     = 'playing';
         id = requestAnimationFrame(wait);
 
@@ -517,26 +519,26 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         }
 
         // Rendering has already been cued up to renderTime, so use it as stopTime
-        stopTime = startTime + renderTime;
+        renderer.stopTime = renderer.startTime + renderTime;
         state = 'stopped';
         cancelAnimationFrame(id);
 
         if (DEBUG) {
             recordIndex = records.length;
-            console.log('Colin: stop', stopTime.toFixed(3));
+            console.log('Colin: stop', renderer.stopTime.toFixed(3));
         }
     }
 
     function timeAtDomTime(domTime) {
-        return (domTime / 1000) > stopTime ?
+        return (domTime / 1000) > renderer.stopTime ?
             renderTime :
-            (domTime / 1000) - startTime ;
+            (domTime / 1000) - renderer.startTime ;
     }
 
     function domTimeAtTime(time) {
-        return (startTime + time) > stopTime ?
-            1000 * stopTime :
-            1000 * (startTime + time) ;
+        return (renderer.startTime + time) > renderer.stopTime ?
+            1000 * renderer.stopTime :
+            1000 * (renderer.startTime + time) ;
     }
 
     this.canvas = canvas;
@@ -603,3 +605,24 @@ export function Renderer(canvas, viewbox, update, detect, collide, render, camer
         }));
     }
 }
+
+define(Renderer.prototype, {
+  /**
+  .playing
+  A boolean indicating whether the node is started and playing (`true`) or
+  stopped and idle (`false`).
+  **/
+
+  playing: {
+      get: function() {
+          // We work in seconds
+          const time = window.performance.now() / 1000;
+          return this.startTime !== undefined
+          && (this.startTime <= time)
+          && (this.stopTime === undefined
+              || this.startTime > this.stopTime
+              || time < this.stopTime
+          );
+      }
+  }
+});

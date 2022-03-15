@@ -47,6 +47,7 @@ import events    from '../../dom/modules/events.js';
 
 import Pool from './pool.js';
 
+
 const DEBUG = true;
 
 const assign = Object.assign;
@@ -434,7 +435,7 @@ export function Renderer(element, update, detect, collide, render, camera, objec
     canvas.width  = viewbox[2];
     canvas.height = viewbox[3];
 
-    const ctx        = canvas.getContext('2d');
+    //const ctx        = canvas.getContext('2d');
     const changes    = [];
     const collisions = [];
     const last       = [];
@@ -545,7 +546,7 @@ export function Renderer(element, update, detect, collide, render, camera, objec
             1000 * (startTime + time) ;
     }
 
-    this.canvas = canvas;
+    this.element = element;
 
     this.start = function() {
         start(window.performance.now() / 1000);

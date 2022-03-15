@@ -1,5 +1,5 @@
 
-<link rel="stylesheet" href="../bolt/style.min.css"></link>
+<link rel="stylesheet" href="../bolt/module.css"></link>
 
 <style>
     :root {
@@ -46,56 +46,155 @@
 <script type="module">
     import { test, group } from './test.js';
     import { drawPath, drawCircle, drawLines } from './modules/canvas.js';
-    import { detectStaticLineMovingCircle } from './modules/collision.js';
+    import {
+        detectStaticLineMovingCircle,
+        detectCircleCircle
+    } from './modules/collision.js';
     import { centroid } from './modules/vector.js';
 
+    const lime = '#B2CB3A';
+    const blue = '#288DC1';
+
+
+    // Line-circle collisions
     group('detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1)', detectStaticLineMovingCircle, function draw(ctx, data, xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1) {
         // Draw line
         drawLines(ctx, [xs, ys, xe, ye]);
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 0.025;
+        ctx.strokeStyle = lime;
+        ctx.lineWidth = 0.05;
         ctx.stroke();
 
         // Draw t0
         drawCircle(ctx, [xc0, yc0, r0]);
-        ctx.fillStyle = '#cccccc88';
+        ctx.fillStyle = blue + '66';
         ctx.fill();
 
         drawLines(ctx, [xc0, yc0, xc1, yc1]);
-        ctx.strokeStyle = '#cccccc88';
+        ctx.strokeStyle = blue + '66';
         ctx.lineWidth = 0.025;
         ctx.stroke();
 
         // Draw t1
         drawCircle(ctx, [xc1, yc1, r1]);
-        ctx.fillStyle = '#99999988';
+        ctx.fillStyle = blue + '66';
         ctx.fill();
 
         if (data) {
             // Draw t
             drawCircle(ctx, [data[0] * (xc1 - xc0) + xc0, data[0] * (yc1 - yc0) + yc0, data[0] * (r1 - r0) + r0]);
-            ctx.fillStyle = '#444444';
+            ctx.fillStyle = blue;
             ctx.fill();
         }
     }, function(test) {
-        test([], 0.5, 0.5, 3, 3, 1, 3, 0.5, 2, 0.5, 0.5);
-        test([], 0.5, 0.5, 3, 3, 2, -1, 0.5, -1, -0.5, 0.5);
-        test([], 0.5, 0.5, 3, 3, 1.5, 0.5, 0.5, 3, 2, 0.5);
-        test([], 0.5, 0.5, 3, 3, 1.5, 0.5, 0.5, 3, 2, 1);
-        test([], 0.5, 0.5, 2.5, 0.5, 1.5, 0.5, 0.5, 3,   2, 0.5);
-        test([], 0.5, 0.5, 2.5, 0.5, 1.5, 1.5, 0.5, 3,   2, 0.5);
-        test([], 0.5, 1,   2.5, 1,   3.1, -1,  0.5, 3.1, 3, 0.5);
-        test([], 0.5, 1,   2.5, 1,   2.8, -1,  0.5, 2.8, 3, 0.5);
-        test([], 0.5, 1,   2.5, 1,   2.8, -1,  0.5, 2.8, 3, 1);
-        test([], 0.5, 1,   2.5, 1,   2.5, -1,  0.5, 2.5, 3, 0.5);
-        test([], 0.5, 1,   2.5, 1,   2.2, -1,  0.5, 2.2, 3, 0.5);
-        test([], 0.5, 0.5, 3, 0.5, 1.5, -1.5, 0.5, 3, 2, 0.5);
-        test([], 0.5, 0.5, 3, 0.5, 1.5, -1.5, 0.5, 0, 2, 0.5);
-        test([], 0.5, -1.5, 0.5, 3, -1.5, 0, 0.5, 1.5, 0, 0.5);
-        test([], 0.5, -1.5, 0.5, 3, -1.5, 0, 0.5, 1.5, 1, 0.5);
-        test([], 0.4, -1.5, 0.6, 3, -1.5, 0, 0.5, 1.5, 1, 0.5);
+        //       xs,   ys,   xe,   ye,   xc0,  yc0,  r0,   xc1,  yc1,  r1
+        test([], -0.5, 0,    3,    0,    2,    0.5,  0.5,  1,    2.5,  0.5);
+        test([], -0.5, 0,    3,    0,    1,    2.5,  0.5,  2,    0.5,  0.5);
+        test([], -0.5, -0.5, 3,    -0.5, 1,    2.5,  0.5,  2,    0.5,  0.5);
+        test([], -0.5, 3.5,  3,    3.5,  1,    2.5,  0.5,  2,    0.5,  0.5);
+        test([], 0.5,  0.5,  3,    3,    1,    3,    0.5,  2,    0.5,  0.5);
+        test([], 0.5,  0.5,  3,    3,    2,    -1,   0.5,  -1,   -0.5, 0.5);
+        test([], 0.5,  0.5,  3,    3,    1.5,  0.5,  0.5,  3,    2,    0.5);
+        test([], 0.5,  0.5,  3,    3,    1.5,  0.5,  0.5,  3,    2,    1);
+        test([], 0.5,  0.5,  2.5,  0.5,  1.5,  0.5,  0.5,  3,    2,    0.5);
+        test([], 0.5,  0.5,  2.5,  0.5,  1.5,  1.5,  0.5,  3,    2,    0.5);
+        test([], 0.5,  1,    2.5,  1,    3.1,  -1,   0.5,  3.1,  3,    0.5);
+        test([], 0.5,  1,    2.5,  1,    2.8,  -1,   0.5,  2.8,  3,    0.5);
+        test([], 0.5,  1,    2.5,  1,    2.8,  -1,   0.5,  2.8,  3,    1);
+        test([], 0.5,  1,    2.5,  1,    2.5,  -1,   0.5,  2.5,  3,    0.5);
+        test([], 0.5,  1,    2.5,  1,    2.2,  -1,   0.5,  2.2,  3,    0.5);
+        test([], 0.5,  0.5,  3,   0.5,   1.5,  -1.5, 0.5,  3,    2,    0.5);
+        test([], 0.5,  0.5,  3,   0.5,   1.5,  -1.5, 0.5,  0,    2,    0.5);
+        test([], 0.5,  -1.5, 0.5, 3,     -1.5, 0,    0.5,  1.5,  0,    0.5);
+        test([], 0.5,  -1.5, 0.5, 3,     -1.5, 0,    0.5,  1.5,  1,    0.5);
+        test([], 0.4,  -1.5, 0.6, 3,     -1.5, 0,    0.5,  1.5,  1,    0.5);
     });
 
+
+    // Circle-circle collisions
+    group('detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, xb1, yb1, rb1)', detectCircleCircle, function draw(ctx, data, xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, xb1, yb1, rb1) {
+        // Draw line
+        //drawLines(ctx, [xs, ys, xe, ye]);
+        //ctx.strokeStyle = 'black';
+        //ctx.lineWidth = 0.025;
+        //ctx.stroke();
+
+
+        // Draw a0
+        drawCircle(ctx, [xa0, ya0, ra0]);
+        ctx.fillStyle = lime + '66';
+        ctx.fill();
+
+        drawLines(ctx, [xa0, ya0, xa1, ya1]);
+        ctx.strokeStyle = lime + '66';
+        ctx.lineWidth = 0.025;
+        ctx.stroke();
+
+        // Draw a1
+        drawCircle(ctx, [xa1, ya1, ra1]);
+        ctx.fillStyle = lime + '66';
+        ctx.fill();
+
+
+        // Draw b0
+        drawCircle(ctx, [xb0, yb0, rb0]);
+        ctx.fillStyle = blue + '66';
+        ctx.fill();
+
+        drawLines(ctx, [xb0, yb0, xb1, yb1]);
+        ctx.strokeStyle = blue + '66';
+        ctx.lineWidth = 0.025;
+        ctx.stroke();
+
+        // Draw b1
+        drawCircle(ctx, [xb1, yb1, rb1]);
+        ctx.fillStyle = blue + '66';
+        ctx.fill();
+
+
+
+
+
+
+
+        if (data) {
+            // Draw at
+            drawCircle(ctx, [data[0] * (xa1 - xa0) + xa0, data[0] * (ya1 - ya0) + ya0, data[0] * (ra1 - ra0) + ra0]);
+            ctx.fillStyle = lime;
+            ctx.fill();
+
+            // Draw bt
+            drawCircle(ctx, [data[0] * (xb1 - xb0) + xb0, data[0] * (yb1 - yb0) + yb0, data[0] * (rb1 - rb0) + rb0]);
+            ctx.fillStyle = blue;
+            ctx.fill();
+        }
+
+    }, function(test) {
+        //       xa0,  ya0,  ra0,  xa1,  ya1,  ra1,  xb0,  yb0,  rb0,  xb1,  yb1,  rb1
+        test([], 0.5,  -0.5, 0.5,  0.5,  3,    0.5,  0.5,  3,    0.5,  0.5,  -0.5, 0.5);
+        test([], -0.5, -0.5, 0.5,  3,    3,    0.5,  -0.5, 3,    0.5,  3,    -0.5, 0.5);
+        test([], -0.5, -0.5, 0.5,  3,    3,    1.2,  -0.5, 3,    0.5,  3,    -0.5, 0.5);
+        test([], -0.5, -0.5, 0.5,  3,    3,    0.5,  -0.5, 3,    0.5,  3,    -0.5, 1.2);
+        test([], -0.5, -0.5, 0.5,  3,    3,    1.2,  -0.5, 3,    0.5,  3,    -0.5, 1.2);
+        test([], -0.5, 0.5,  0.5,  3,    3,    0.5,  -0.5, 1.5,  0.5,  3,    -0.5, 0.5);
+        test([], -0.5, 0.5,  0.5,  3,    -0.5, 0.5,  -0.5, 1.5,  0.5,  3,    3,    0.5);
+
+        test([], -0.5,  0.5,  0.5, 2,    2,    0.5,  0.5,  0.5,  0.5,  3,    2,    0.5);
+        test([], -0.5,  0.5,  0.5, 2,    2,    0.5,  0.5,  0.5,  0.5,  2,    1.3333333333333333,    0.5);
+        test([], -0.5,  0.5,  0.5, 2,    2,    0.5,  0.5,  0.5,  0.5,  4,    2.6666666666666667,    0.5);
+        // Something odd going on with these two, they produce the opposite result from
+        // that which I expect, and I think it is something to do with negative radius
+        // collisions happening before t = 0 or something
+        test([], -0.5,  0.5,  0.5, 2,    2,    0.5,  0.5,  0.5,  0.5,  3,    2,    0.2);
+        test([], -0.5,  0.5,  0.5, 2,    2,    0.5,  0.5,  0.5,  0.5,  3,    2,    0.8);
+
+        test([], 0.5,  0.5,  0.5,  3,    3,    0.5,  1.5,  0.5,  0.5,  3,    2,    1);
+        test([], 0.5,  0.5,  0.5,  3,    3,    0.5,  2,    -1,   0.5,  -1,   -0.5, 0.5);
+        test([], -1,   0.5,  0.5,  3.5,  0.5,  0.5,  1,    0.5,  0.5,  2.5,  2,    0.5);
+        test([], 0.5,  0.5,  0.5,  2.5,  0.5,  0.5,  1.5,  1.5,  0.5,  3,    2,    0.5);
+        test([], 0.5,  0.5,  0.5,  2.5,  0.5,  0.5,  1.5,  1.5,  0.5,  3,    2,    1.2);
+    });
+
+/*
     group('centroid(data)', detectStaticLineMovingCircle, function draw(ctx, data) {
         drawPath(ctx, data);
         ctx.strokeStyle = '#cccccc88';
@@ -111,4 +210,5 @@
     }, function(test) {
         test([], [0.5, 0.5, 3, 3, 1, 3, 0.5, 2, 0.5, 0.5]);
     });
+*/
 </script>

@@ -41,7 +41,7 @@ export function test(value) {
 
     // Draw axes
     drawPath(ctx, axes);
-    ctx.strokeStyle = '#88bbee';
+    ctx.strokeStyle = '#bbbbbb';
     ctx.lineWidth = 0.0125;
     ctx.stroke();
 

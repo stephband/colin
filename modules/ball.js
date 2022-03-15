@@ -1,5 +1,10 @@
 
-import { clamp, deep, get, id, overload } from '../../fn/module.js';
+import id       from '../../fn/modules/id.js';
+import overload from '../../fn/modules/overload.js';
+import clamp    from '../../fn/modules/clamp.js';
+import deep     from '../../fn/modules/deep.js';
+import get      from '../../fn/modules/get.js';
+
 import { mag } from './vector.js';
 import { drawCircle } from './canvas.js';
 import { stage } from './stage.js';
@@ -34,29 +39,13 @@ const voice = {
         { id: 'envelope', type: 'envelope', data: {
             attack: [
                 [0,     "step",   0],
-                [0.0018, "linear", 1],
-                [0.002, "target", 0, 0.16]
+                [0.0016, "linear", 1],
+                [0.0026, "target", 0, 0.24]
             ],
             release: [
                 [0, "step", 1],
-                [0.05, "linear", 0]
+                [0.04, "linear", 0]
             ]
-        }, control: {
-            start: {
-                // min -48dB
-                gain: {
-                    // scale in dB/oct, min and max are output clamps on the
-                    // resulting gain value
-                    1: { type: 'scale', scale: -6, min: 0, max: 2 },
-                    2: { type: 'logarithmic', min: 0.00390625, max: 1 }
-                },
-
-                rate: {
-                    // scale in dB/oct, min and max are output clamps on the
-                    // resulting gain value
-                    1: { type: 'scale', scale: 1, min: 0.125, max: 8 }
-                }
-            }
         }},
         { id: 'mix', type: 'mix', data: { gain: 0, pan: 0 }}
     ],
@@ -77,31 +66,32 @@ const voice = {
         { source: 'envelope',   target: 'mix.gain' }
     ],
 
-    __start: {
-        'harmonic-1': { frequency: { 1: { type: 'none' }}},
-        'harmonic-2': { frequency: { 1: { type: 'none' }}},
-        'harmonic-3': { frequency: { 1: { type: 'none' }}},
-        'harmonic-4': { frequency: { 1: { type: 'none' }}},
-        'harmonic-5': { frequency: { 1: { type: 'none' }}},
-        'harmonic-6': { frequency: { 1: { type: 'none' }}},
-        'envelope': {
-            // min -48dB
-            gain: {
-                // scale in dB/oct, min and max are output clamps on the
-                // resulting gain value
-                1: { type: 'scale', scale: -6, min: 0, max: 2 },
-                2: { type: 'logarithmic', min: 0.00390625, max: 1 }
-            },
+    commands: [
+        { target: 'harmonic-1' },
+        { target: 'harmonic-2' },
+        { target: 'harmonic-3' },
+        { target: 'harmonic-4' },
+        { target: 'harmonic-5' },
+        { target: 'harmonic-6' },
+        {
+            target: 'envelope',
+            data: {
+                // min -48dB
+                gain: [
+                    // scale in dB/oct, min and max are output clamps on the
+                    // resulting gain value
+                    { type: 'scale', scale: -6, min: 0, max: 2 },
+                    { type: 'logarithmic', min: 0.00390625, max: 1 }
+                ],
 
-            rate: {
-                // scale in dB/oct, min and max are output clamps on the
-                // resulting gain value
-                1: { type: 'scale', scale: 1, min: 0.125, max: 8 }
+                rate: [
+                    // scale in dB/oct, min and max are output clamps on the
+                    // resulting gain value
+                    { type: 'scale', scale: 1, min: 0.125, max: 8 }
+                ]
             }
         }
-    },
-
-    __stop: ['envelope'],
+    ],
 
     properties: {
         pan: 'mix.pan'
@@ -165,16 +155,16 @@ export function collide(collision, loc0, loc1, ball) {
         // frequency
         // https://en.wikipedia.org/wiki/Natural_frequency
         //
-        // In a mass-spring system, with mass m and spring stiffness k, 
+        // In a mass-spring system, with mass m and spring stiffness k,
         // the natural frequency can be calculated as:
         //
         // f = root(k / m)
         //
         // Where k is a stiffness constant.
-        Math.pow(380000 / ball.mass, 0.5) + 'Hz', 
+        Math.pow(380000 / ball.mass, 0.5) + 'Hz',
 
         // velocity, clamped to -12dB
-        clamp(0, 0.25, force / 6000), 
+        clamp(0, 0.25, force / 6000),
 
         // settings
         voiceSettings

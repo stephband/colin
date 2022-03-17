@@ -223,8 +223,8 @@ export function detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, 
     const yct   = a[1] - ratio * (a[1] - yc0);
     const t     = timeAtPoint(xc0, yc0, xc1, yc1, xct, yct);
 
-    // Ignore collisions before t = 0
-    if (t < 0) { return; }
+    // Ignore collisions before t = 0 or on or after t = 1
+    if (t < 0 || t >= 1) { return; }
 
     const [xpt, ypt] = nearestPointOnLine(xs, ys, xe, ye, xct, yct);
 

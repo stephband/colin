@@ -1,7 +1,7 @@
 
 import { by, get, overload, noop } from '../fn/module.js';
 import { mag, angle } from './modules/vector.js';
-import { detectCircleCircle, detectBoxCircle } from './modules/collision.js';
+import { detectCircleCircle, detectBoxCircle } from './modules/detection.js';
 import { Renderer } from './modules/renderer.js';
 import * as Grid from './modules/grid.js';
 import * as Box from './modules/box.js';
@@ -159,7 +159,7 @@ export function Scene(objects, viewbox, canvas) {
         render, {
             type: 'camera',
             data: viewbox
-        }, 
+        },
         objects
     );
 }

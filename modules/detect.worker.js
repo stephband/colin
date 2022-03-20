@@ -1,5 +1,5 @@
 
-import { detectCircleCircle, detectBoxCircle } from './collision.js';
+import { detectCircleCircle, detectBoxCircle } from './detection.js';
 
 const worker = self;
 

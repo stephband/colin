@@ -223,7 +223,7 @@ function update(t1, t2, detect, collide, objects, collisions, next) {
     return update(tc, t2, detect, collide, objects, collisions, next);
 }
 
-export default function DOMRenderer(element, detect, collide, render, objects) {
+export default function DOMRenderer(element, detect, collide, objects) {
     // Initialise as frame renderer with .startTime, .stopTime, .currentTime, etc.
     Renderer.call(this);
 

@@ -101,7 +101,7 @@ function detectCollisions(t1, t2, detect, objects, collisions, next) {
                 }
 
                 if (tc < next[0].time) {
-                    next.forEach(setIdle);
+                    next.forEach(Collision.release);
                     next.length = 0;
                 }
             }
@@ -182,6 +182,10 @@ function update(t1, t2, detect, collide, objects, collisions, next) {
         return;
     }
 
+    if (collisions.length > 4) {
+        throw new Error('Too many collisions, something must be done')
+    }
+
     const tc = next[0].time;
 
     // Update object data to time t
@@ -209,6 +213,8 @@ function update(t1, t2, detect, collide, objects, collisions, next) {
         // Update extrapolated data for collided objects at time t2
         updateData2(collision.objectA, tc, t2);
         updateData2(collision.objectB, tc, t2);
+
+        log(collision.time.toFixed(3), 'collision ' + collision.objectA.type + '-' + collision.objectB.type, collision.point[0], collision.point[1]);
     }
 
     collisions.push.apply(collisions, next);
@@ -221,17 +227,17 @@ export default function DOMRenderer(element, detect, collide, render, objects) {
     // Initialise as frame renderer with .startTime, .stopTime, .currentTime, etc.
     Renderer.call(this);
 
-    this.element    = element;
-    this.objects    = objects || [];
-    this.detect     = detect;
-    this.collide    = collide;
+    this.element = element;
+    this.objects = objects || [];
+    this.detect  = detect;
+    this.collide = collide;
 
     // Hmmmm
     this.collisions = [];
     this.next = [];
 }
 
-let r = 10;
+let r = 1000;
 
 DOMRenderer.prototype = assign(create(Renderer.prototype), {
     render: function(t1, t2) {

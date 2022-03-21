@@ -160,7 +160,7 @@ function nearestPointOnLine(xs, ys, xe, ye, xp, yp) {
     const c2 = a * yp - b * xp;
     const d  = a * a + b * b;
 
-    // Is point on the line`?
+    // Is point on the line?
     if (d === 0) {
         return Float64Array.of(xp, yp);
     }
@@ -219,15 +219,22 @@ export function detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, 
     // I don't understand the way he does it, I'm doing it the stupid way
     const m     = pow(xv0 * xv0 + yv0 * yv0, 0.5);
     const ratio = r0 / m;
-    const xct   = a[0] - ratio * (a[0] - xc0);
-    const yct   = a[1] - ratio * (a[1] - yc0);
-    const t     = timeAtPoint(xc0, yc0, xc1, yc1, xct, yct);
+    const xctA  = a[0] - ratio * (a[0] - xc0);
+    const yctA  = a[1] - ratio * (a[1] - yc0);
+    const xctB  = a[0] + ratio * (a[0] - xc0);
+    const yctB  = a[1] + ratio * (a[1] - yc0);
+    const tA    = timeAtPoint(xc0, yc0, xc1, yc1, xctA, yctA);
+    const tB    = timeAtPoint(xc0, yc0, xc1, yc1, xctB, yctB);
 
+    // Take the earlier of the two collisions
+    const xct   = tA < tB ? xctA : xctB ;
+    const yct   = tA < tB ? yctA : yctB ;
+    const t     = tA < tB ? tA : tB ;
+//console.log(t, tA, tB, '\n', [xc0, yc0], '\n', [xc1, yc1]);
     // Ignore collisions before t = 0 or on or after t = 1
     if (t < 0 || t >= 1) { return; }
 
     const [xpt, ypt] = nearestPointOnLine(xs, ys, xe, ye, xct, yct);
-
     const g = (ye - ys) / (xe - xs);
 
     // Is point inside line (not including the actual points at the ends,
@@ -406,13 +413,15 @@ function Buffer(t, xp, yp, xa, ya, ra, xb, yb, rb) {
 }
 
 function timeAtQuadratic(a, b, c) {
-    if (b === 0) {
-        return c === 0 ?
+    if (!b) {
+        // Parallel movement, not counted as a collision
+        return undefined;
+        /*return c === 0 ?
             // Parallel movement, constant intersection
             // How are we going to figure out start and end of arc tho??
             0 :
             // Parallel movement, no intersection
-            undefined ;
+            undefined ;*/
     }
 
     const root = pow(b * b - 4 * a * c, 0.5);
@@ -420,9 +429,9 @@ function timeAtQuadratic(a, b, c) {
     const tb = (-b - root) / (2 * a);
 
     // We are only interested in the first collision time, at that point they
-    // are moving tawards one another
+    // are moving towards one another
     const tc = min(ta, tb);
-    return tc < 0 ?
+    return (tc < 0 || tc >= 1) ?
         undefined :
         tc ;
 }
@@ -451,7 +460,7 @@ export function detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, 
     const c = xba0 * xba0 + yba0 * yba0 - rab0 * rab0;
     const t = timeAtQuadratic(a, b, c);
 
-    if (t === undefined) { return; }
+    if (t !== 0 && !t) { return; }
 
     const xat = t * (xa1 - xa0) + xa0;
     const yat = t * (ya1 - ya0) + ya0;

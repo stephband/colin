@@ -23,7 +23,7 @@ define(Collision.prototype, {
 
     dataA: {
         get: function() {
-            return this.data.slice(3, this.objectA.size);
+            return this.data.slice(3, 3 + this.objectA.size);
         }
     },
 

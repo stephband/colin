@@ -74,10 +74,24 @@ assign(Renderer.prototype, {
 
             const t2 = this.currentTime / 1000;
 
-            if (window.DEBUG) { group(t1.toFixed(3) + ' - ' + t2.toFixed(3), 'frame'); }
+            /*if (window.DEBUG) {
+                group(t1.toFixed(3) + ' - ' + t2.toFixed(3), 'frame');
 
-            // Run the render function an update current render time
-            this.render(t1, t2);
+                try {
+                    // Run the render function an update current render time
+                    this.render(t1, t2);
+                }
+                catch(e) {
+                    this.stop();
+                    throw e;
+                }
+
+                groupEnd();
+            }
+            else {*/
+                // Run the render function an update current render time
+                this.render(t1, t2);
+            /*}*/
 
             if (window.DEBUG) { groupEnd(); }
         };

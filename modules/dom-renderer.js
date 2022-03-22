@@ -254,7 +254,7 @@ DOMRenderer.prototype = assign(create(Renderer.prototype), {
             // Call object.update() at the start of the render cycle, giving
             // the object an opportunity to update its state, add
             // dependent objects into the graph or make other changes??
-            this.objects[n].update && this.objects[n].update(this);
+            this.objects[n].update && this.objects[n].update(t1, t2, this);
         }
 
         // Extrapolate object's data at t2 and glue it to object as [$data]

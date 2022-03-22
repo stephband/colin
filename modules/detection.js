@@ -172,7 +172,8 @@ function nearestPointOnLine(xs, ys, xe, ye, xp, yp) {
 }
 
 function staticLineMovingRadius() {
-
+    // TODO
+    return;
 }
 
 
@@ -230,7 +231,7 @@ export function detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, 
     const xct   = tA < tB ? xctA : xctB ;
     const yct   = tA < tB ? yctA : yctB ;
     const t     = tA < tB ? tA : tB ;
-//console.log(t, tA, tB, '\n', [xc0, yc0], '\n', [xc1, yc1]);
+
     // Ignore collisions before t = 0 or on or after t = 1
     if (t < 0 || t >= 1) { return; }
 
@@ -396,7 +397,7 @@ export function detectCirclePoint(xc0, yc0, r0, xc1, yc1, r1, xp0, yp0, xp1, yp1
 
 
 
-
+/*
 const buffer = new Float64Array(9);
 
 function Buffer(t, xp, yp, xa, ya, ra, xb, yb, rb) {
@@ -411,7 +412,7 @@ function Buffer(t, xp, yp, xa, ya, ra, xb, yb, rb) {
     buffer[8] = rb;
     return buffer;
 }
-
+*/
 function timeAtQuadratic(a, b, c) {
     if (!b) {
         // Parallel movement, not counted as a collision
@@ -475,7 +476,7 @@ export function detectCircleCircle(xa0, ya0, ra0, xa1, ya1, ra1, xb0, yb0, rb0, 
     const yp = ratio * (ybt - yat) + yat;
 
     // time, xp, yp, xa, ya, ra, xb, yb, rb
-    return Buffer(t, xp, yp, xat, yat, rat, xbt, ybt, rbt);
+    return Float64Array.of(t, xp, yp, xat, yat, rat, xbt, ybt, rbt);
 }
 
 const boxCircleCollisions = {

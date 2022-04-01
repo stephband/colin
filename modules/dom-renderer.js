@@ -182,12 +182,13 @@ function update(t1, t, t2, detect, collide, objects, collisions) {
     return update(t1, time, t2, detect, collide, objects, collisions);
 }
 
-export default function DOMRenderer(element, detect, collide, objects) {
+export default function DOMRenderer(element, update, detect, collide, objects) {
     // Initialise as frame renderer with .startTime, .stopTime, .currentTime, etc.
     Renderer.call(this);
 
     this.element = element;
     this.objects = objects || [];
+    this.update  = update;
     this.detect  = detect;
     this.collide = collide;
 
@@ -198,32 +199,62 @@ export default function DOMRenderer(element, detect, collide, objects) {
 
 DOMRenderer.prototype = assign(create(Renderer.prototype), {
     render: function(t1, t2) {
-        if (!this.objects.length) {
+        const objects = this.objects;
+
+        if (!objects.length) {
             log('No objects to render');
             return this;
         }
 
-        let n = this.objects.length;
+        let n = objects.length;
         while (n--) {
             // Call object.update() at the start of the render cycle, giving
             // the object an opportunity to update its state, add
             // dependent objects into the graph or make other changes??
-            this.objects[n].update && this.objects[n].update(t1, t2, this);
+            objects[n].update && objects[n].update(t1, t2, this);
+        }
+
+        // Cycle through objects from end to start
+        n = objects.length;
+        while (--n) {
+            const objectB = objects[n];
+
+            // Ignore uncollidable objects
+            if (objectB.collidable === false) { continue; }
+
+            // Cycle through remaining objects
+            let a = n;
+            while (a--) {
+                // Get current state and state at frame end, t1
+                const objectA = objects[a];
+
+                // Ignore uncollidable objects. Objects may be in multiple collision
+                // collidable. As long as one match is found, or both are undefined
+                // (which is treated as its own group), objects will be tested for
+                // collision.
+                if (objectA.collidable === false || (
+                    objectB.collidable ?
+                        (!objectA.collidable || !includes(objectB.collidable, objectA.collidable)) :
+                        !!objectA.collidable
+                )) { continue; }
+
+                this.update(objectA, objectB, t1, t2);
+            }
         }
 
         // Extrapolate object's data at t2 and glue it to object as [$data]
-        n = this.objects.length;
+        n = objects.length;
         while (n--) {
-            updateData2(this.objects[n], t1, t2);
+            updateData2(objects[n], t1, t2);
         }
 
         // Commence linear extrapolation collision detection cycle
-        update(t1, t1, t2, this.detect, this.collide, this.objects, this.collisions, this.next);
+        update(t1, t1, t2, this.detect, this.collide, objects, this.collisions, this.next);
 
         // Render objects
-        n = this.objects.length;
+        n = objects.length;
         while (n--) {
-            this.objects[n].render();
+            objects[n].render();
         }
 
         return this;

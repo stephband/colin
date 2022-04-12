@@ -197,9 +197,37 @@ export default function DOMRenderer(element, update, detect, collide, objects) {
     this.next = [];
 }
 
+let frameMax   = -Infinity;
+let frameMin   = Infinity;
+let frameAvg   = 0;
+let frameCount = 0;
+
+const frameMinElem = document.getElementById('frame-min');
+const frameMaxElem = document.getElementById('frame-max');
+const frameAvgElem = document.getElementById('frame-avg');
+const frameCntElem = document.getElementById('frame-count');
+
 DOMRenderer.prototype = assign(create(Renderer.prototype), {
     render: function(t1, t2) {
         const objects = this.objects;
+
+        const duration = (t2 - t1) * 1000;
+
+        ++frameCount;
+        frameMax = frameMax > duration ? frameMax : duration;
+        frameMin = frameMin < duration ? frameMin : duration;
+        frameAvg = (frameAvg * (frameCount - 1) + duration) / frameCount;
+
+        if (frameCount >= 180) {
+            frameMaxElem.textContent = frameMax.toFixed(3);
+            frameMinElem.textContent = frameMin.toFixed(3);
+            frameAvgElem.textContent = frameAvg.toFixed(3);
+            frameCntElem.textContent = frameCount;
+            frameMax   = -Infinity;
+            frameMin   = Infinity;
+            frameCount = 0;
+            frameAvg   = 0;
+        }
 
         if (!objects.length) {
             log('No objects to render');

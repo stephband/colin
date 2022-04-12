@@ -42,7 +42,7 @@ assign(Renderer.prototype, {
         }
 
         const time = domTime || window.performance.now();
-
+document.getElementById('times').innerHTML += (time.toFixed(3) + ' start<br/>');
         const wait = (domTime) => {
             // Wait until t1 is positive. We must do this because frame times lag
             // DOM time, so when start() is called the first frame is older than
@@ -116,7 +116,7 @@ assign(Renderer.prototype, {
         }
 
         this.stopTime = domTime || this.startTime + this.currentTime;
-
+document.getElementById('times').innerHTML += (this.stopTime.toFixed(3) + ' stop<br/>');
         // Stop immediately where stopTime is less than or equal to current
         // render time
         if (this.stopTime <= this.startTime + this.currentTime) {

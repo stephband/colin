@@ -74,14 +74,7 @@ function detectCollisions(t1, t2, detect, objects, collisions) {
 }
 
 function getData2(object) {
-    return object[$data] || (object[$data] = new Float64Array(object.size * 2));
-}
-
-function setData(size, writeData, readData) {
-    let n = size * 2;
-    while (n--) {
-        writeData[n] = readData[n];
-    }
+    return object[$data] || (object[$data] = new Float64Array(object.size));
 }
 
 function setPositionData(size, writeData, readData) {
@@ -91,19 +84,19 @@ function setPositionData(size, writeData, readData) {
     }
 }
 
-function updateData1(object, t1, t2) {
+function updatePosition1(object, t1, t2) {
     const duration = t2 - t1;
     const size = object.size;
     const data = object.data;
 
     let n = size;
     while (n--) {
-        // position2 = position1 + frame velocity * duration
+        // position1 = position1 + average velocity * duration
         data[n] = data[n] + data[size + n] * duration;
     }
 }
 
-function updateData2(object, t1, t2) {
+function updatePosition2(object, t1, t2) {
     const duration = t2 - t1;
     const size  = object.size;
     const data  = object.data;
@@ -116,7 +109,7 @@ function updateData2(object, t1, t2) {
     }
 }
 
-function updateData(object, t1, t2) {
+function updateDataBegin(object, t1, t2) {
     const duration = t2 - t1;
     const size     = object.size;
     const data     = object.data;
@@ -124,67 +117,54 @@ function updateData(object, t1, t2) {
 
     let n = size;
     while (n--) {
-        const a  = data[size + size + n];
-        const v1 = data[size + n];
-        const p1 = data[n];
+        // Half acceleration for this frame
+        const va = 0.5 * duration * data[size + size + n];
 
-        // velocity2 = velocity1 + acceleration * duration
-        const v2 = v1 + a * duration;
+        // Average velocity for this frame is velocity at t1 plus half
+        // acceleration
+        const vf = data[size + n] = data[size + n] + va;
 
-        // Average velocity for this frame
-        const v = v1 + 0.5 * a * duration;
-
-        // position2 = position1 + velocity * duration
-        const p2 = p1 + v * duration;
-
-        // Store velocity for this frame
-        data[size + n] = v;
-
-        // Store velocity and position at t2
-        data2[size + n] = v2;
-        data2[n] = p2;
+        // Store projected position at t2
+        data2[n] = data[n] + vf * duration;
     }
 }
 
-function update(t1, t, t2, detect, collide, objects, collisions) {
-    let n;
+function updateDataEnd(object, t1, t2) {
+    const duration = t2 - t1;
+    const size     = object.size;
+    const data     = object.data;
+    const data2    = getData2(object);
+
+    let n = size;
+    while (n--) {
+        // Half acceleration for this frame
+        const va = 0.5 * duration * data[size + size + n];
+
+        // Velocity at t2 is (possibly muutated) frame velocity plus half
+        // acceleration. While this incurs minor error for anything that has
+        // changed course during the frame, it is at least physically accurate
+        // for anything travelling in a straight line.
+        const v2 = data[size + n] = data[size + n] + va;
+
+        // Position at t2 copied from projected position
+        data[n] = data2[n];
+    }
+}
+
+function update(t, t2, detect, collide, objects, collisions) {
 
     // Get the next collision(s) - if multiple, they must have same time
     detectCollisions(t, t2, detect, objects, collisions);
 
-    // If no collisions
-    if (!collisions.length) {
-        // Copy extrapolated data at t2 into data, bringing all objects
-        // up-to-date with time t2
-        n = objects.length;
-        while (n--) {
-            setData(objects[n].size, objects[n].data, getData2(objects[n]));
-        }
-
-        /*if (window.DEBUG && g) {
-            g = false;
-            groupEnd();
-        }*/
-
-        // Thus ends the update cycle
-        return;
-    }
-
-    if (collisions.length > 12) {
-        throw new Error('Too many collisions (>12), is something wrong?');
-    }
-
-    /*if (window.DEBUG && !g) {
-        g = true;
-        group(t1.toFixed(3) + ' - ' + t2.toFixed(3), 'collisions');
-    }*/
+    // If no collisions end the update cycle
+    if (!collisions.length) { return; }
 
     const time = collisions[0].time;
 
     // Update object data to time t
-    n = objects.length;
+    let n = objects.length;
     while (n--) {
-        updateData1(objects[n], t, time);
+        updatePosition1(objects[n], t, time);
     }
 
     // For any objects involved in a collision their object state is updated
@@ -192,9 +172,9 @@ function update(t1, t, t2, detect, collide, objects, collisions) {
     // collision time because if we recalculate from t0 we get rounding errors
     // that increase the number of duplicate collisions that must be filtered -
     // by about twenty-fold or so
-    n = collisions.length;
-    while (n--) {
-        const collision = collisions[n];
+    let c = collisions.length;
+    while (c--) {
+        const collision = collisions[c];
 
         // Set positional data at time
         setPositionData(collision.objectA.size, collision.objectA.data, collision.dataA);
@@ -204,8 +184,8 @@ function update(t1, t, t2, detect, collide, objects, collisions) {
         collide(collision);
 
         // Update extrapolated data for collided objects at time t2
-        updateData2(collision.objectA, time, t2);
-        updateData2(collision.objectB, time, t2);
+        updatePosition2(collision.objectA, time, t2);
+        updatePosition2(collision.objectB, time, t2);
 
         log(collision.time.toFixed(3), 'collision ' + collision.objectA.type + '[' + collision.objectA.id + ']-' + collision.objectB.type + '[' + collision.objectB.id + ']', collision.point[0], collision.point[1]);
 
@@ -215,7 +195,7 @@ function update(t1, t, t2, detect, collide, objects, collisions) {
     collisions.length = 0;
 
     // All objects should now be up-to-date with time tc
-    return update(t1, time, t2, detect, collide, objects, collisions);
+    return update(time, t2, detect, collide, objects, collisions);
 }
 
 export default function DOMRenderer(element, update, detect, collide, objects, renderBegin, renderEnd) {
@@ -284,17 +264,24 @@ DOMRenderer.prototype = assign(create(Renderer.prototype), {
         // Extrapolate object's data at t2 and glue it to object as [$data]
         n = objects.length;
         while (n--) {
-            updateData(objects[n], t1, t2);
+            updateDataBegin(objects[n], t1, t2);
         }
 
         // Commence linear extrapolation collision detection cycle
-        update(t1, t1, t2, this.detect, this.collide, objects, this.collisions, this.next);
+        update(t1, t2, this.detect, this.collide, objects, this.collisions, this.next);
+
+        // Copy extrapolated data at t2 into data, bringing all objects
+        // up-to-date with time t2
+        n = objects.length;
+        while (n--) {
+            updateDataEnd(objects[n], t1, t2);
+        }
 
         this.renderBegin && this.renderBegin(this.element);
 
         // Render objects
-        n = objects.length;
-        while (n--) {
+        n = -1;
+        while (++n < objects.length) {
             objects[n].render();
         }
 

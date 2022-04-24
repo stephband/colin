@@ -19,6 +19,13 @@ export function drawCircle(ctx, data) {
     ctx.closePath();
 }
 
+export function drawLine(ctx, points) {
+    ctx.beginPath();
+    ctx.moveTo(points[0], points[1]);
+    ctx.lineTo(points[2], points[3]);
+    ctx.closePath();
+}
+
 export function drawLines(ctx, points) {
     if (points.length < 4) {
         throw new Error('points must contain at least two coordinates (length 4)')

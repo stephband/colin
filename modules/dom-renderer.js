@@ -282,7 +282,7 @@ DOMRenderer.prototype = assign(create(Renderer.prototype), {
         // Render objects
         n = -1;
         while (++n < objects.length) {
-            objects[n].render();
+            objects[n].render(this.element);
         }
 
         this.renderEnd && this.renderEnd(this.element);

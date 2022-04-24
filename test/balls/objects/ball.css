@@ -1,0 +1,18 @@
+
+.ball {
+    display: grid;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+
+    width:  calc(2 * var(--radius, 15vmin));
+    height: calc(2 * var(--radius, 15vmin));
+    margin: calc(-1 * var(--radius, 15vmin));
+
+    text-align: center;
+
+    border: 2px solid currentcolor;
+    border-radius: 50%;
+    background-color: inherit;
+}

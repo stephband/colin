@@ -1,0 +1,12 @@
+
+.balls-layer {
+    --hover-color: green;
+    color: #03ffff;
+    background-color: #0015ff;
+}
+
+.balls-layer > .ball {
+    position: absolute;
+    top: 0;
+    left: 0;
+}

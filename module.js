@@ -4,7 +4,7 @@ import { mag, angle } from './modules/vector.js';
 import { detectCircleCircle, detectBoxCircle } from './modules/detection.js';
 import { Renderer } from './modules/renderer.js';
 import * as Grid from './modules/grid.js';
-import * as Box from './modules/box.js';
+import * as Box from  './modules/box.js';
 import * as Ball from './modules/ball.js';
 
 const sin  = Math.sin;

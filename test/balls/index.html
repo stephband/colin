@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr" class="js"><head>
+    <meta charset="utf-8">
+    <meta name="author" content="{[author.name]}">
+    <meta name="description" content="Documentation for {[title]}. {[description]}">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, maximum-scale=1">
+
+    <title>Balls</title>
+
+    <script title="load">
+    document.documentElement.className += ' js content-loading loading';
+    window.addEventListener('DOMContentLoaded', () => document.documentElement.classList.remove('content-loading'));
+    window.addEventListener('load', () => document.documentElement.classList.remove('loading'));
+    </script>
+
+    <script title="config">
+    window.elementOverflowToggleStylesheet = '/static/build/bolt/elements/overflow-toggle/shadow.css';
+    window.elementSlideShowStylesheet = '/static/build/bolt/elements/slide-show/shadow.css';
+    window.config = {};
+    </script>
+
+    <link rel="stylesheet" href="../../../bolt/classes/layer.css">
+    <link rel="stylesheet" href="module.css">
+
+    <style>
+        .ball {
+            --radius: 5vmin;
+            /* (4 / 3) * pi * r * r * r; */
+            --mass: calc(4.1887902048 * 125);
+        }
+
+        #ball-1 {
+            transform: translate3d(40vmin, 0vmin, 0);
+        }
+
+        #ball-2 {
+            transform: translate3d(60vmin, 0vmin, 0);
+        }
+    </style>
+</head>
+
+<body class="balloons-body">
+    <div class="balls-layer layer" id="stage">
+        <div class="ball" id="ball-1"></div>
+        <!--div class="ball" id="ball-2"></div-->
+    </div>
+
+    <script type="module" title="Module">
+        import './module.js';
+    </script>
+</body>
+</html>

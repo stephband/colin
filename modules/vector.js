@@ -1,4 +1,6 @@
 
+const pow = Math.pow;
+
 export function copy(vector) {
     return Float64Array.of(
         vector[0],
@@ -12,8 +14,11 @@ export function mag(x, y) {
 }
 
 export function angle(x, y) {
-    // Angle with the x axis
     return Math.atan2(y, x);
+}
+
+export function distance(x, y) {
+    return pow(pow(x, 2) + pow(y, 2), 0.5);
 }
 
 export function multiply(n, vector) {

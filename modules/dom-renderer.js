@@ -175,19 +175,23 @@ function update(t, t2, detect, collide, objects, collisions) {
     let c = collisions.length;
     while (c--) {
         const collision = collisions[c];
+        const objectA   = collision.objectA;
+        const objectB   = collision.objectB;
+        const dataA     = collision.data.slice(3, 3 + objectA.size);
+        const dataB     = collision.data.slice(3 + objectA.size);
 
         // Set positional data at time
-        setPositionData(collision.objectA.size, collision.objectA.data, collision.dataA);
-        setPositionData(collision.objectB.size, collision.objectB.data, collision.dataB);
+        setPositionData(objectA.size, objectA.data, dataA);
+        setPositionData(objectB.size, objectB.data, dataB);
 
         // Decide what to do on a collision, such as update velocities
-        collide(collision);
+        collide(collision.objectA, collision.objectB, time, collision.data[1], collision.data[2], dataA, dataB);
 
         // Update extrapolated data for collided objects at time t2
-        updatePosition2(collision.objectA, time, t2);
-        updatePosition2(collision.objectB, time, t2);
+        updatePosition2(objectA, time, t2);
+        updatePosition2(objectB, time, t2);
 
-        log(collision.time.toFixed(3), 'collision ' + collision.objectA.type + '[' + collision.objectA.id + ']-' + collision.objectB.type + '[' + collision.objectB.id + ']', collision.point[0], collision.point[1]);
+        log(collision.time.toFixed(3), 'collision ' + collision.objectA.type + '-' + collision.objectB.type, collision.point[0], collision.point[1]);
 
         Collision.release(collision);
     }
@@ -230,7 +234,7 @@ DOMRenderer.prototype = assign(create(Renderer.prototype), {
             // Call object.update() at the start of the render cycle, giving
             // the object an opportunity to update its state, add
             // dependent objects into the graph or make other changes??
-            objects[n].update && objects[n].update(t1, t2, this);
+            objects[n].update && objects[n].update(t1, t2, this.element, this.objects);
         }
 
         // Cycle through objects from end to start
@@ -282,7 +286,11 @@ DOMRenderer.prototype = assign(create(Renderer.prototype), {
         // Render objects
         n = -1;
         while (++n < objects.length) {
-            objects[n].render(this.element);
+            if (window.DEBUG && !objects[n].render) {
+                throw new Error('Object of type "' + objects[n].type + '" does not have a .render() method');
+            }
+
+            objects[n].render(this.element, t2);
         }
 
         this.renderEnd && this.renderEnd(this.element);

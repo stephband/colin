@@ -1,4 +1,6 @@
 
+const turn = 2 * Math.PI;
+
 function lineTo(ctx, point) {
     ctx.lineTo(point[0], point[1]);
     return ctx;
@@ -13,12 +15,6 @@ export function drawPath(ctx, points) {
     .closePath();
 }
 
-export function drawCircle(ctx, data) {
-    ctx.beginPath();
-    ctx.arc(data[0], data[1], data[2], 0, Math.PI * 2, true);
-    ctx.closePath();
-}
-
 export function drawLine(ctx, points) {
     ctx.beginPath();
     ctx.moveTo(points[0], points[1]);
@@ -26,19 +22,27 @@ export function drawLine(ctx, points) {
     ctx.closePath();
 }
 
-export function drawLines(ctx, points) {
-    if (points.length < 4) {
-        throw new Error('points must contain at least two coordinates (length 4)')
+export function drawCircle(ctx, data) {
+    ctx.beginPath();
+    ctx.arc(data[0], data[1], data[2], 0, turn, true);
+    ctx.closePath();
+}
+
+export function drawPolygon(ctx, data) {
+    if (data.length < 4) {
+        throw new Error('data must contain at least two coordinates (length 4)')
     }
 
     ctx.beginPath();
-    ctx.moveTo(points[0], points[1]);
+    ctx.moveTo(data[0], data[1]);
 
-    let n = 2;
-    while (n < points.length) {
-        ctx.lineTo(points[n], points[n + 1]);
-        n += 2;
+    let n = 0;
+    while ((n += 2) < data.length) {
+        ctx.lineTo(data[n], data[n + 1]);
     }
 
     ctx.closePath();
 }
+
+// Support old fn name
+export const drawLines = drawPolygon;

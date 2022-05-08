@@ -185,6 +185,84 @@ function timeAtPoint(x0, y0, x1, y1, xp, yp) {
         (yp - y0) / (y1 - y0) ;
 }
 
+
+function detectXLine(x, ys, ye, xp0, yp0, xp1, yp1) {
+    // It has at least some horizontal movement
+    const t = (x - xp0) / (xp1 - xp0) ;
+
+    // Intersect outside time window?
+    if (t < 0 || t >= 1) {
+        return;
+    }
+
+    const ypt = t * (yp1 - yp0) + yp0;
+
+    // Intersect outside line ends?
+    return (ypt >= min(ys, ye) && ypt <= max(ys, ye)) ?
+        Float64Array.of(
+            // Time, x, y of collision
+            t, x, ypt,
+            // x, y of line start and end
+            x, ys, x, ye,
+            // x, y of point
+            x, ypt
+        ) :
+        undefined ;
+}
+
+function detectYLine(xs, y, xe, xp0, yp0, xp1, yp1) {
+    // It has at least some vertical movement
+    const t = (y - yp0) / (yp1 - yp0) ;
+
+    // Intersect outside time window?
+    if (t < 0 || t >= 1) {
+        return;
+    }
+
+    const xpt = t * (xp1 - xp0) + xp0;
+
+    // Intersect outside line ends?
+    return (xpt >= min(xs, xe) && xpt <= max(xs, xe)) ?
+        Float64Array.of(
+            // Time, x, y of collision
+            t, xpt, y,
+            // x, y of line start and end
+            xs, y, xe, y,
+            // x, y of point
+            xpt, y
+        ) :
+        undefined ;
+}
+
+function detectLine(xs, ys, xe, ye, xp0, yp0, xp1, yp1, g) {
+    const t = (ys - yp0 + g * (xp0 - xs)) / (yp1 - yp0 + g * (xp0 - xp1));
+
+    // Intersect outside time window?
+    if (t < 0 || t >= 1) {
+        return;
+    }
+
+    const xpt = t * (xp1 - xp0) + xp0;
+    const ypt = t * (yp1 - yp0) + yp0;
+
+    // Intersect outside line ends?
+    if((g > -1 && g < 1) ?
+        (xpt < min(xs, xe) || xpt > max(xs, xe)) :
+        (ypt < min(ys, ye) || ypt > max(ys, ye))) {
+        return;
+    }
+
+    return Float64Array.of(
+        // Time, x, y of collision
+        t, xpt, ypt,
+        // x, y of line start and end
+        xs, ys, xe, ye,
+        // x, y of point
+        xpt, ypt
+    );
+}
+
+
 export function detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, yc1, r1) {
     // The closest point on the line to the circle center start
     const l0 = nearestPointOnLine(xs, ys, xe, ye, xc0, yc0);
@@ -254,21 +332,21 @@ export function detectStaticLineMovingCircle(xs, ys, xe, ye, xc0, yc0, r0, xc1, 
 }
 
 export function detectStaticLineMovingPoint(xs, ys, xe, ye, xp0, yp0, xp1, yp1) {
-    const g  = (ye - ys) / (xe - xs) ;
+    const gl = (ye - ys) / (xe - xs) ;
     const gp = (yp1 - yp0) / (xp1 - xp0);
 
     // Are line and trajectory parallel?
-    return g === gp ?
+    return gl === gp ?
         // Are line and trajectory overlapping?
-        g === gradient(s, p1) ?
-            detectLineOverlap(xs, ys, xe, ye, xp0, yp0, xp1, yp1, g) :
+        gl === gradient(s, p1) ?
+            detectLineOverlap(xs, ys, xe, ye, xp0, yp0, xp1, yp1, gl) :
         undefined :
     // Line is vertical
-    g === Infinity ? detectXLine(xs, ys, ye, xp0, yp0, xp1, yp1) :
+    gl === Infinity ? detectXLine(xs, ys, ye, xp0, yp0, xp1, yp1) :
     // Line is horizontal
-    g === 0 ? detectYLine(ys, xs, xe, xp0, yp0, xp1, yp1) :
-    // Line is angled
-    detectLine(xs, ys, xe, ye, xp0, yp0, xp1, yp1, g) ;
+    gl === 0 ? detectYLine(xs, ys, xe, xp0, yp0, xp1, yp1) :
+    // Line is angled xs, ys, xe, ye, xp0, yp0, xp1, yp1, g
+    detectLine(xs, ys, xe, ye, xp0, yp0, xp1, yp1, gl) ;
 }
 
 export function detectMovingLineMovingPoint(xs0, ys0, xe0, ye0, xs1, ys1, xe1, ye1, xp0, yp0, xp1, yp1) {
@@ -331,7 +409,7 @@ export function detectMovingLineMovingPoint(xs0, ys0, xe0, ye0, xs1, ys1, xe1, y
         return;
     }
 
-    return Float64Array.of(t, xpt, ypt);
+    return Float64Array.of(t, xpt, ypt, xst, yst, xet, yet, xpt, ypt);
 }
 
 export function detectLinePoint(xs0, ys0, xe0, ye0, xs1, ys1, xe1, ye1, xp0, yp0, xp1, yp1) {
